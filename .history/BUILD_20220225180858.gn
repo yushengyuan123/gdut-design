@@ -1,0 +1,372 @@
+import("filenames.gni")
+import("buildflags/buildflags.gni")
+import("//content/public/app/mac_helpers.gni")
+import("build/asar.gni")
+import("build/npm.gni")
+import("build/templated_file.gni")
+import("//build/apple/tweak_info_plist.gni")
+import("filenames.libcxx.gni")
+import("filenames.libcxxabi.gni")
+
+branding = read_file("shell/app/BRANDING.json", "json")
+electron_version = read_file("ELECTRON_VERSION", "trim string")
+electron_product_name = branding.product_name
+electron_project_name = branding.project_name
+
+
+#npm_action("build_electron_definitions") {
+#    script = "gn-typescript-definitions"
+#    args = [ rebase_path("$target_gen_dir/tsc/typings/electron.d.ts") ]
+#    inputs = auto_filenames.api_docs + [ "yarn.lock" ]
+#
+#    outputs = [ "$target_gen_dir/tsc/typings/electron.d.ts" ]
+#}
+
+npm_action("electron_version_args") {
+    script = "generate-version-json"
+
+    outputs = [ "$target_gen_dir/electron_version.args" ]
+
+    args = rebase_path(outputs)
+
+    inputs = [
+        "ELECTRON_VERSION",
+        "script/generate-version-json.js",
+    ]
+}
+
+
+if (is_mac) {
+    import("//build/config/mac/rules.gni")
+    import("build/rules.gni")
+
+    electron_framework_name = "$electron_product_name Framework"
+    electron_framework_version = "A"
+    electron_mac_bundle_id = branding.mac_bundle_id
+
+    # 这个东西负责加载xib，同时转变为了nib
+    mac_xib_bundle_data("electron_xibs") {
+        sources = [ "shell/common/resources/mac/MainMenu.xib" ]
+    }
+}
+
+config("branding") {
+    defines = [
+        "ELECTRON_PRODUCT_NAME=\"$electron_product_name\"",
+        "ELECTRON_PROJECT_NAME=\"$electron_project_name\"",
+    ]
+}
+
+config("electron_lib_config") {
+    include_dirs = [ "." ]
+}
+
+templated_file("electron_version_header") {
+    deps = [ ":electron_version_args" ]
+
+    template = "build/templates/electron_version.tmpl"
+    output = "$target_gen_dir/electron_version.h"
+
+    args_files = get_target_outputs(":electron_version_args")
+}
+
+mac_framework_bundle("electron_framework") {
+    output_name = electron_framework_name
+    framework_version = electron_framework_version
+    framework_contents = [
+        "Resources",
+        "Libraries",
+    ]
+    public_deps = [
+        ":electron_lib",
+    ]
+    deps = [
+        ":electron_xibs",
+    ]
+    # 这个配置项目是定义mac生成的应用的一些行为的配置文件
+    # 详情：https://blog.csdn.net/linxinfa/article/details/107735015
+    info_plist = "shell/common/resources/mac/Info.plist"
+
+    extra_substitutions = [
+        "ELECTRON_BUNDLE_ID=$electron_mac_bundle_id.framework",
+        "ELECTRON_VERSION=$electron_version",
+    ]
+    include_dirs = [ ".", "//third_party/abseil-cpp" ]
+    sources = filenames.framework_sources
+    frameworks = []
+
+    if (enable_osr) {
+        frameworks += [ "IOSurface.framework" ]
+    }
+
+    ldflags = [
+        "-Wl,-install_name,@rpath/$output_name.framework/$output_name",
+        "-rpath",
+        "@loader_path/Libraries",
+
+    # Required for exporting all symbols of libuv.
+    #        "-Wl,-force_load,obj/third_party/electron_node/deps/uv/libuv.a",
+    ]
+    if (is_component_build) {
+        ldflags += [
+            "-rpath",
+            "@executable_path/../../../../../..",
+        ]
+    }
+}
+
+
+
+bundle_data("electron_app_framework_bundle_data") {
+    sources = [ "$root_out_dir/$electron_framework_name.framework" ]
+
+    outputs = [ "{{bundle_contents_dir}}/Frameworks/{{source_file_part}}" ]
+    public_deps = [
+        ":electron_framework+link",
+    ]
+
+#    foreach(helper_params, content_mac_helpers) {
+#        sources +=
+#        [ "$root_out_dir/${electron_helper_name}${helper_params[2]}.app" ]
+#        public_deps += [ ":electron_helper_app_${helper_params[0]}" ]
+#    }
+}
+
+#typescript_build("default_app_js") {
+#    deps = [ ":build_electron_definitions" ]
+#
+#    sources = filenames.default_app_ts_sources
+#
+#    output_gen_dir = target_gen_default_app_js
+#    output_dir_name = "default_app"
+#    tsconfig = "tsconfig.default_app.json"
+#}
+
+target_gen_default_app_js = "$target_gen_dir/js/default_app"
+
+copy("default_app_static") {
+    sources = filenames.default_app_static_sources
+    outputs = [ "$target_gen_default_app_js/{{source}}" ]
+}
+
+copy("default_app_octicon_deps") {
+    sources = filenames.default_app_octicon_sources
+    outputs = [ "$target_gen_default_app_js/electron/default_app/octicon/{{source_file_part}}" ]
+}
+
+# 把default_app目录下sources的几个产物，拷贝压缩到default_app.asar
+asar("default_app_asar") {
+    deps = [
+#        ":default_app_js",
+#        ":default_app_octicon_deps",
+        ":default_app_static",
+    ]
+
+    root = "$target_gen_default_app_js/electron/default_app"
+    sources =
+    #    get_target_outputs(":default_app_js") +
+    get_target_outputs(":default_app_static")
+#    get_target_outputs(":default_app_octicon_deps")
+    outputs = [ "$root_out_dir/resources/default_app.asar" ]
+}
+
+bundle_data("electron_app_resources") {
+    public_deps = [
+        ":default_app_asar",
+#        ":electron_app_strings_bundle_data",
+    ]
+    sources = [
+        "$root_out_dir/resources/default_app.asar",
+        "shell/browser/resources/mac/electron.icns",
+    ]
+    outputs = [ "{{bundle_resources_dir}}/{{source_file_part}}" ]
+}
+
+asar_hashed_info_plist("electron_app_plist") {
+    keys = [ "DEFAULT_APP_ASAR_HEADER_SHA" ]
+    hash_targets = [ ":default_app_asar_header_hash" ]
+    plist_file = "shell/browser/resources/mac/Info.plist"
+}
+
+source_set("electron_lib") {
+    sources = filenames.lib_sources
+
+    public_configs = [
+        ":branding",
+        ":electron_lib_config",
+    ]
+
+    defines = [ "V8_DEPRECATION_WARNINGS" ]
+    libs = []
+
+    include_dirs = [
+        ".",
+        "$target_gen_dir",
+
+        # TODO(nornagon): replace usage of SchemeRegistry by an actually exported
+        # API of blink, then remove this from the include_dirs.
+        "//third_party/blink/renderer",
+    ]
+
+    if (is_mac) {
+        sources += filenames.lib_sources_mac
+    }
+
+    deps = [
+        # 这个包似乎就是用来引入NSApplication这些东西
+        "//content/common:mac_helpers",
+        ":electron_version_header",
+        "//v8",
+        "//content/public/browser",
+        "//content/public/common",
+        "//content/public/child",
+        "//content/public/gpu",
+        "//content/public/renderer",
+        "//content/public/utility",
+    ]
+
+    # if (is_mac) {
+    #     deps += [
+    #         "//components/remote_cocoa/app_shim",
+    #         "//components/remote_cocoa/browser",
+    #         "//content/common:mac_helpers",
+    #         "//ui/accelerated_widget_mac",
+    #     ]
+    # }
+
+    public_deps = [
+        "//base",
+        "//content/public/app",
+    ]
+
+    if (enable_electron_extensions) {
+        deps += [
+        "shell/browser/extensions/api:api_registration",
+        "shell/common/extensions/api",
+        "shell/common/extensions/api:extensions_features",
+        "//chrome/browser/resources:component_extension_resources",
+        "//components/update_client:update_client",
+        "//components/zoom",
+        "//extensions/browser",
+        "//extensions/browser:core_api_provider",
+        "//extensions/browser/updater",
+        "//extensions/common",
+        "//extensions/common:core_api_provider",
+        "//extensions/renderer",
+        ]
+    }
+
+    frameworks = [
+        "Foundation.framework",
+        "AppKit.framework",
+    ]
+}
+
+mac_app_bundle("electron_app") {
+    output_name = electron_product_name
+    sources = [
+        "shell/app/electron_main_mac.cc",
+    ]
+    include_dirs = [ ".", "//third_party/abseil-cpp" ]
+    defines = [ "HELPER_EXECUTABLE" ]
+    ldflags = [
+        "-rpath",
+        "@executable_path/../Frameworks",
+    ]
+    info_plist_target = ":electron_app_plist"
+    deps = [
+        "//content",
+        ":electron_app_framework_bundle_data",
+        ":electron_app_resources",
+        ":electron_app_plist",
+        "//electron/buildflags",
+    ]
+    extra_substitutions = [
+        "ELECTRON_BUNDLE_ID=$electron_mac_bundle_id",
+        "ELECTRON_VERSION=$electron_version",
+    ]
+}
+
+template("dist_zip") {
+  _runtime_deps_target = "${target_name}__deps"
+  _runtime_deps_file =
+      "$root_out_dir/gen.runtime/" + get_label_info(target_name, "dir") + "/" +
+      get_label_info(target_name, "name") + ".runtime_deps"
+
+  group(_runtime_deps_target) {
+    forward_variables_from(invoker,
+                           [
+                             "deps",
+                             "data_deps",
+                             "data",
+                             "testonly",
+                           ])
+    write_runtime_deps = _runtime_deps_file
+  }
+
+  action(target_name) {
+    script = "//electron/build/zip.py"
+    deps = [ ":$_runtime_deps_target" ]
+    forward_variables_from(invoker,
+                           [
+                             "outputs",
+                             "testonly",
+                           ])
+    flatten = false
+    flatten_relative_to = false
+    if (defined(invoker.flatten)) {
+      flatten = invoker.flatten
+      if (defined(invoker.flatten_relative_to)) {
+        flatten_relative_to = invoker.flatten_relative_to
+      }
+    }
+    args = rebase_path(outputs + [ _runtime_deps_file ], root_build_dir) + [
+             target_cpu,
+             target_os,
+             "$flatten",
+             "$flatten_relative_to",
+           ]
+  }
+}
+
+copy("libcxx_headers") {
+  sources = libcxx_headers + libcxx_licenses +
+            [ "//buildtools/third_party/libc++/__config_site" ]
+  outputs = [ "$target_gen_dir/electron_libcxx_include/{{source_root_relative_dir}}/{{source_file_part}}" ]
+}
+
+dist_zip("libcxx_headers_zip") {
+  data_deps = [ ":libcxx_headers" ]
+  flatten = true
+  flatten_relative_to = rebase_path(
+          "$target_gen_dir/electron_libcxx_include/buildtools/third_party/libc++/trunk",
+          "$root_out_dir")
+
+  outputs = [ "$root_build_dir/libcxx_headers.zip" ]
+}
+
+copy("libcxxabi_headers") {
+  sources = libcxxabi_headers + libcxxabi_licenses
+  outputs = [ "$target_gen_dir/electron_libcxxabi_include/{{source_root_relative_dir}}/{{source_file_part}}" ]
+}
+
+dist_zip("libcxxabi_headers_zip") {
+  data_deps = [ ":libcxxabi_headers" ]
+  flatten = true
+  flatten_relative_to = rebase_path(
+          "$target_gen_dir/electron_libcxxabi_include/buildtools/third_party/libc++abi/trunk",
+          "$root_out_dir")
+
+  outputs = [ "$root_build_dir/libcxxabi_headers.zip" ]
+}
+
+action("libcxx_objects_zip") {
+  deps = [ "//buildtools/third_party/libc++" ]
+  script = "build/zip_libcxx.py"
+  outputs = [ "$root_build_dir/libcxx_objects.zip" ]
+  args = rebase_path(outputs)
+}
+
+#group("dada_test") {
+#    public_deps = [ ":electron_app" ]
+#}

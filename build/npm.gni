@@ -1,0 +1,54 @@
+#script = "gn-typescript-definitions"
+#args = [ rebase_path("$target_gen_dir/tsc/typings/electron.d.ts") ]
+#inputs = auto_filenames.api_docs + [ "yarn.lock" ]
+#
+#outputs = [ "$target_gen_dir/tsc/typings/electron.d.ts" ]
+#target_name = build_electron_definitions
+
+template("npm_action") {
+  assert(defined(invoker.script),
+         "Need script name to run (must be defined in package.json)")
+  assert(defined(invoker.args), "Need script argumets")
+
+  action("npm_pre_flight_" + target_name) {
+    inputs = [
+      "//electron/package.json",
+      "//electron/yarn.lock",
+    ]
+    # 这个脚本的作用就是执行npm run装包的
+    script = "//electron/build/npm-run.py"
+
+    outputs = [ "$target_gen_dir/npm_pre_stamps/" + target_name + ".stamp" ]
+#    这个是运行pre-flight脚本检查依赖是否是最新的，这个是一个npm包
+    args = [
+      "--silent",
+      "pre-flight",
+      "--",
+      "--stamp",
+      rebase_path(outputs[0]),
+    ]
+  }
+  # 这个才是执行我们自定的命令
+  action(target_name) {
+#    这个函数的作用就是从别的作用域拷贝变量
+    forward_variables_from(invoker,
+                           [
+                             "deps",
+                             "public_deps",
+                             "sources",
+                             "inputs",
+                             "outputs",
+                           ])
+    if (!defined(deps)) {
+      deps = []
+    }
+    deps += [ ":npm_pre_flight_" + target_name ]
+
+    script = "//electron/build/npm-run.py"
+    args = [
+             "--silent",
+             invoker.script,
+             "--",
+           ] + invoker.args
+  }
+}
