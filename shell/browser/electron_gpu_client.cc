@@ -14,12 +14,5 @@ namespace electron {
 
 ElectronGpuClient::ElectronGpuClient() = default;
 
-// void ElectronGpuClient::PreCreateMessageLoop() {
-// #if defined(OS_WIN)
-//   auto env = base::Environment::Create();
-//   if (env->HasVar("ELECTRON_DEFAULT_ERROR_MODE"))
-//     SetErrorMode(GetErrorMode() & ~SEM_NOGPFAULTERRORBOX);
-// #endif
-// }
 
 }  // namespace electron

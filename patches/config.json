@@ -1,0 +1,3 @@
+{
+  "src/electron/patches/node": "../../third_party/electron_node"
+}

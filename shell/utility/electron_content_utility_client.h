@@ -7,31 +7,39 @@
 
 #include <memory>
 
+#include "base/compiler_specific.h"
 #include "content/public/utility/content_utility_client.h"
+#include "mojo/public/cpp/bindings/binder_map.h"
+#include "printing/buildflags/buildflags.h"
+
+
+namespace printing {
+class PrintingHandler;
+}
+
+namespace mojo {
+class ServiceFactory;
+}
 
 namespace electron {
 
 class ElectronContentUtilityClient : public content::ContentUtilityClient {
- public:
-  ElectronContentUtilityClient();
-  ~ElectronContentUtilityClient() override;
+  public:
+    ElectronContentUtilityClient();
+    ~ElectronContentUtilityClient() override;
 
-  // disable copy
-  ElectronContentUtilityClient(const ElectronContentUtilityClient&) = delete;
-  ElectronContentUtilityClient& operator=(const ElectronContentUtilityClient&) =
-      delete;
+    // disable copy
+    ElectronContentUtilityClient(const ElectronContentUtilityClient&) = delete;
+    ElectronContentUtilityClient& operator=(const ElectronContentUtilityClient&) =
+        delete;
 
-//   void ExposeInterfacesToBrowser(mojo::BinderMap* binders) override;
-//   void RegisterMainThreadServices(mojo::ServiceFactory& services) override;
-//   void RegisterIOThreadServices(mojo::ServiceFactory& services) override;
+    void ExposeInterfacesToBrowser(mojo::BinderMap* binders) override;
+    void RegisterMainThreadServices(mojo::ServiceFactory& services) override;
+    void RegisterIOThreadServices(mojo::ServiceFactory& services) override;
 
-//  private:
-// #if BUILDFLAG(ENABLE_PRINT_PREVIEW) && defined(OS_WIN)
-//   std::unique_ptr<printing::PrintingHandler> printing_handler_;
-// #endif
-
-//   // True if the utility process runs with elevated privileges.
-//   bool utility_process_running_elevated_ = false;
+  private:
+   // True if the utility process runs with elevated privileges.
+//    bool utility_process_running_elevated_ = false;
 };
 
 }  // namespace electron

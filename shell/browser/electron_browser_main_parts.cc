@@ -23,10 +23,21 @@
 #include "content/public/common/content_switches.h"
 #include "content/public/common/result_codes.h"
 
+#include "shell/browser/feature_list.h"
+#include "shell/common/node_bindings.h"
+#include "shell/common/node_includes.h"
+#include "shell/views/shell.h"
+#include "shell/views/shell_platform_delegate.h"
+#include "shell/views/shell_browser_context.h"
+
 // #include "shell/browser/browser.h"
 
 namespace electron {
-  namespace {}
+  namespace {
+    GURL GetStartupURL() {
+      return GURL("https://www.baidu.com");
+    }
+  }
 
   // static
   ElectronBrowserMainParts* ElectronBrowserMainParts::self_ = nullptr;
@@ -46,14 +57,52 @@ namespace electron {
     return self_;
   }
 
-  // int ElectronBrowserMainParts::PreMainMessageLoopRun() {
-  //   // 这个东西好像是根据url控制webUI的
-  //   content::WebUIControllerFactory::RegisterFactory(ElectronWebUIControllerFactory::GetInstance());
+  int ElectronBrowserMainParts::PreEarlyInitialization() {
+    printf("PreEarlyInitialization\n");
+    field_trial_list_ = std::make_unique<base::FieldTrialList>(nullptr);
 
-  //   // Notify observers that main thread message loop was initialized.
-  //   // Browser::Get() = ElectronBrowserMainParts实例
-  //   Browser::Get()->PreMainMessageLoopRun();
-  // }
+    return GetExitCode();
+  }
+
+  void ElectronBrowserMainParts::PostEarlyInitialization() {
+    node_bindings_->Initialize();
+
+    node_bindings_->LoadEnvironment();
+
+    InitializeFeatureList();
+
+    // Initialize field trials.
+    InitializeFieldTrials();
+
+    printf("PostEarlyInitializationEnd\n");
+  }
+
+  int ElectronBrowserMainParts::GetExitCode() const {
+    return exit_code_.value_or(content::RESULT_CODE_NORMAL_EXIT);
+  }
+
+  void ElectronBrowserMainParts::PreCreateMainMessageLoopCommon() {
+  #if defined(OS_MAC)
+    InitializeMainNib();
+    RegisterURLHandler();
+  #endif
+  }
+
+  int ElectronBrowserMainParts::PreMainMessageLoopRun() {
+    // 这个东西好像是根据url控制webUI的
+    // content::WebUIControllerFactory::RegisterFactory(ElectronWebUIControllerFactory::GetInstance());
+
+    // Notify observers that main thread message loop was initialized.
+    // Browser::Get() = ElectronBrowserMainParts实例
+    // Browser::Get()->PreMainMessageLoopRun();
+    Shell::Initialize(std::make_unique<ShellPlatformDelegate>());
+
+    set_browser_context(new ShellBrowserContext(false));
+
+    Shell::CreateNewWindow(browser_context_.get(), GetStartupURL(), nullptr);
+
+    return 0;
+  }
   
 } // namespace electron
 

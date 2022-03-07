@@ -15,6 +15,9 @@ namespace electron {
             // disable copy
             ElectronContentClient(const ElectronContentClient&) = delete;
             ElectronContentClient& operator=(const ElectronContentClient&) = delete;
+            // 这句话和js脚本解析相关
+            base::StringPiece GetDataResource(int resource_id,
+                                              ui::ResourceScaleFactor) override;
     };
 }
 

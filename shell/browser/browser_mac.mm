@@ -15,4 +15,10 @@ namespace electron {
   void Browser::Show() {
     [[AtomApplication sharedApplication] unhide:nil];
   }
+
+  void Browser::DockSetMenu(ElectronMenuModel* model) {
+    ElectronApplicationDelegate* delegate =
+        (ElectronApplicationDelegate*)[NSApp delegate];
+    [delegate setApplicationDockMenu:model];
+  }
 }

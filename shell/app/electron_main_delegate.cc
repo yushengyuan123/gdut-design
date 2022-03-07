@@ -141,6 +141,22 @@ void RegisterPathProvider() {
   base::PathService::RegisterProvider(ElectronPathProvider, PATH_START,
                                       PATH_END);
 }
+
+bool SubprocessNeedsResourceBundle(const std::string& process_type) {
+  return
+#if defined(OS_LINUX)
+      // The zygote process opens the resources for the renderers.
+      process_type == ::switches::kZygoteProcess ||
+#endif
+#if defined(OS_MAC)
+      // Mac needs them too for scrollbar related images and for sandbox
+      // profiles.
+      process_type == ::switches::kGpuProcess ||
+#endif
+      process_type == ::switches::kPpapiPluginProcess ||
+      process_type == ::switches::kRendererProcess ||
+      process_type == ::switches::kUtilityProcess;
+}
 }  // namespace
 // 这个应该是找resources.pak路径
 std::string LoadResourceBundle(const std::string& locale) {
@@ -181,8 +197,9 @@ bool ElectronMainDelegate::BasicStartupComplete(int* exit_code) {
   // if (env->HasVar(kElectronEnableStackDumping))
   // 	base::debug::EnableInProcessStackDumping();
 
-  if (env->HasVar(kElectronDisableSandbox))
+  if (env->HasVar(kElectronDisableSandbox)) {
     command_line->AppendSwitch(sandbox::policy::switches::kNoSandbox);
+  }
 
   tracing_sampler_profiler_ =
       tracing::TracingSamplerProfiler::CreateOnMainThread();
@@ -226,6 +243,23 @@ void ElectronMainDelegate::PreBrowserMain() {
 #if defined(OS_MAC)
   RegisterAtomCrApp();
 #endif
+}
+
+void ElectronMainDelegate::SandboxInitialized(const std::string& process_type) {
+
+}
+
+void ElectronMainDelegate::PreSandboxStartup() {
+  auto* command_line = base::CommandLine::ForCurrentProcess();
+
+   std::string process_type =
+      command_line->GetSwitchValueASCII(::switches::kProcessType);
+
+  if (SubprocessNeedsResourceBundle(process_type)) {
+    // 这个初始化资源加载对象，如果没有他那么你页面的js资源是处理不了的
+    std::string locale = command_line->GetSwitchValueASCII(::switches::kLang);
+    LoadResourceBundle(locale);
+  }
 }
 
 

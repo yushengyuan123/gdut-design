@@ -4,10 +4,17 @@ import("//content/public/app/mac_helpers.gni")
 import("build/asar.gni")
 import("build/npm.gni")
 import("build/templated_file.gni")
+import("build/webpack/webpack.gni")
 import("//build/apple/tweak_info_plist.gni")
+import("filenames.auto.gni")
 import("filenames.libcxx.gni")
 import("filenames.libcxxabi.gni")
 import("electron_paks.gni")
+import("//tools/v8_context_snapshot/v8_context_snapshot.gni")
+import("//v8/gni/snapshot_toolchain.gni")
+import("//tools/grit/grit_rule.gni")
+import("//tools/grit/repack.gni")
+
 
 branding = read_file("shell/app/BRANDING.json", "json")
 electron_version = read_file("ELECTRON_VERSION", "trim string")
@@ -22,6 +29,10 @@ electron_project_name = branding.project_name
 #
 #    outputs = [ "$target_gen_dir/tsc/typings/electron.d.ts" ]
 #}
+
+declare_args() {
+  use_prebuilt_v8_context_snapshot = false
+}
 
 npm_action("electron_version_args") {
     script = "generate-version-json"
@@ -42,10 +53,12 @@ npm_action("electron_version_args") {
 # }
 
 
+
 if (is_mac) {
     import("//build/config/mac/rules.gni")
     import("build/rules.gni")
     import("//third_party/icu/config.gni")
+    import("//v8/gni/v8.gni")
 
     electron_framework_name = "$electron_product_name Framework"
     electron_helper_name = "$electron_product_name Helper"
@@ -57,13 +70,35 @@ if (is_mac) {
         sources = [ "shell/common/resources/mac/MainMenu.xib" ]
     }
 
+    action("fake_v8_context_snapshot_generator") {
+        script = "build/fake_v8_context_snapshot_generator.py"
+        args = [
+            rebase_path("$root_out_dir/$v8_context_snapshot_filename"),
+            rebase_path("$root_out_dir/fake/$v8_context_snapshot_filename"),
+        ]
+        outputs = [ "$root_out_dir/fake/$v8_context_snapshot_filename" ]
+    }
+
     bundle_data("electron_framework_resources") {
-        # public_deps = [ ":packed_resources" ]
-        public_deps = []
+        public_deps = [ ":packed_resources" ]
         sources = []
         if (icu_use_data_file) {
             sources += [ "$root_out_dir/icudtl.dat" ]
             public_deps += [ "//third_party/icu:icudata" ]
+        }
+        if (v8_use_external_startup_data) {
+            public_deps += [ "//v8" ]
+            if (use_v8_context_snapshot) {
+                if (use_prebuilt_v8_context_snapshot) {
+                    sources += [ "$root_out_dir/fake/$v8_context_snapshot_filename" ]
+                    public_deps += [ ":fake_v8_context_snapshot_generator" ]
+                } else {
+                    sources += [ "$root_out_dir/$v8_context_snapshot_filename" ]
+                    public_deps += [ "//tools/v8_context_snapshot" ]
+                }
+            } else {
+                sources += [ "$root_out_dir/snapshot_blob.bin" ]
+            }
         }
         outputs = [ "{{bundle_resources_dir}}/{{source_file_part}}" ]
     }
@@ -80,6 +115,7 @@ config("electron_lib_config") {
     include_dirs = [ "." ]
 }
 
+
 templated_file("electron_version_header") {
     deps = [ ":electron_version_args" ]
 
@@ -89,6 +125,18 @@ templated_file("electron_version_header") {
     args_files = get_target_outputs(":electron_version_args")
 }
 
+action("electron_fuses") {
+  script = "build/fuses/build.py"
+
+  inputs = [ "build/fuses/fuses.json5" ]
+
+  outputs = [
+    "$target_gen_dir/fuses.h",
+    "$target_gen_dir/fuses.cc",
+  ]
+
+  args = rebase_path(outputs)
+}
 
 
 mac_framework_bundle("electron_framework") {
@@ -130,8 +178,8 @@ mac_framework_bundle("electron_framework") {
         "-rpath",
         "@loader_path/Libraries",
 
-    # Required for exporting all symbols of libuv.
-    #        "-Wl,-force_load,obj/third_party/electron_node/deps/uv/libuv.a",
+        # Required for exporting all symbols of libuv.
+        "-Wl,-force_load,obj/third_party/electron_node/deps/uv/libuv.a",
     ]
 
     if (is_component_build) {
@@ -148,6 +196,7 @@ template("electron_helper_app") {
 
         output_name = electron_helper_name + invoker.helper_name_suffix
         deps = [ ":electron_framework+link" ]
+        deps += [ "//sandbox/mac:seatbelt" ]
         defines = [ "HELPER_EXECUTABLE" ]
         sources = [
             "shell/app/electron_main_mac.cc",
@@ -260,7 +309,70 @@ asar_hashed_info_plist("electron_app_plist") {
     plist_file = "shell/browser/resources/mac/Info.plist"
 }
 
+# npm_action("build_electron_definitions") {
+#   script = "gn-typescript-definitions111"
+#   args = [ rebase_path("$target_gen_dir/tsc/typings/electron.d.ts") ]
+#   inputs = auto_filenames.api_docs + [ "yarn.lock" ]
+
+#   outputs = [ "$target_gen_dir/tsc/typings/electron.d.ts" ]
+# }
+
+
+webpack_build("electron_browser_bundle") {
+#   deps = [ ":build_electron_definitions" ]
+
+  inputs = auto_filenames.browser_bundle_deps
+
+  config_file = "//electron/build/webpack/webpack.config.browser.js"
+  print("$target_gen_dir")
+  out_file = "$target_gen_dir/js2c/browser_init.js"
+}
+
+action("electron_js2c") {
+  deps = [
+    ":electron_browser_bundle",
+  ]
+
+  sources = [
+    "$target_gen_dir/js2c/browser_init.js",
+  ]
+
+  inputs = sources + [ "//third_party/electron_node/tools/js2c.py" ]
+  print("$root_gen_dir")
+  outputs = [ "$root_gen_dir/electron_natives.cc" ]
+
+  script = "build/js2c.py"
+  args = [ rebase_path("//third_party/electron_node") ] +
+         rebase_path(outputs, root_build_dir) +
+         rebase_path(sources, root_build_dir)
+}
+
+action("electron_generate_node_defines") {
+  script = "build/generate_node_defines.py"
+
+  inputs = [
+    "//third_party/electron_node/src/tracing/trace_event_common.h",
+    "//third_party/electron_node/src/tracing/trace_event.h",
+    "//third_party/electron_node/src/util.h",
+  ]
+
+  outputs = [
+    "$target_gen_dir/push_and_undef_node_defines.h",
+    "$target_gen_dir/pop_node_defines.h",
+  ]
+
+  args = [ rebase_path(target_gen_dir) ] + rebase_path(inputs)
+}
+
+action("generate_config_gypi") {
+  outputs = [ "$root_gen_dir/config.gypi" ]
+  script = "script/generate-config-gypi.py"
+  args = rebase_path(outputs) + [ target_cpu ]
+}
+
 source_set("electron_lib") {
+    configs += [ "//v8:external_startup_data" ]
+    configs += [ "//third_party/electron_node:node_internals" ]
     sources = filenames.lib_sources
 
     public_configs = [
@@ -284,18 +396,41 @@ source_set("electron_lib") {
         sources += filenames.lib_sources_mac
     }
 
+    sources += filenames.my_lib
+
     deps = [
+        ":electron_fuses",
+        ":electron_generate_node_defines",
+        ":electron_js2c",
+        "chromium_src:chrome",
         # 这个包似乎就是用来引入NSApplication这些东西
         "//content/common:mac_helpers",
         ":electron_version_header",
+        ":resources",
         "//v8",
+        "//v8:v8_libplatform",
         "//content/public/browser",
         "//content/public/common",
         "//content/public/child",
         "//content/public/gpu",
         "//content/public/renderer",
         "//content/public/utility",
-        "//chrome/common"
+        "//chrome/common",
+        "//media/capture/mojom:video_capture",
+        "//media/mojo/mojom",
+        "//services/device/public/cpp/geolocation",
+        "//services/device/public/cpp/hid",
+        "//services/device/public/mojom",
+        "//services/proxy_resolver:lib",
+        "//services/video_capture/public/mojom:constants",
+        "//services/viz/privileged/mojom/compositing",
+        "//third_party/electron_node:node_lib",
+        "//ui/base/idle",
+        "//ui/events:dom_keycode_converter",
+        "//ui/gl",
+        "//ui/native_theme",
+        "//ui/shell_dialogs",
+        "//ui/views",
     ]
 
     # if (is_mac) {
@@ -312,16 +447,66 @@ source_set("electron_lib") {
         "//content/public/app",
     ]
 
+    sources += get_target_outputs(":electron_fuses")
+
     if (enable_electron_extensions) {
         deps += [
             "//extensions/common",
         ]
     }
 
+    deps += ["//chrome/services/printing/public/mojom"]
+
+    deps += [
+        "//extensions/browser",
+    ]
+
+    if (is_mac) {
+      deps += [ 
+            "//components/remote_cocoa/app_shim",
+            "//components/remote_cocoa/browser",
+            "//chrome/services/mac_notifications/public/mojom",
+            "//components/printing/common:mojo_interfaces",
+      ]
+    }
+
     frameworks = [
         "Foundation.framework",
         "AppKit.framework",
     ]
+}
+
+grit("resources") {
+  source = "electron_resources.grd"
+
+  outputs = [
+    "grit/electron_resources.h",
+    "electron_resources.pak",
+  ]
+
+  # Mojo manifest overlays are generated.
+  grit_flags = [
+    "-E",
+    "target_gen_dir=" + rebase_path(target_gen_dir, root_build_dir),
+  ]
+
+  deps = [ ":copy_shell_devtools_discovery_page" ]
+
+  output_dir = "$target_gen_dir"
+}
+
+copy("copy_shell_devtools_discovery_page") {
+  sources = [ "//content/shell/resources/shell_devtools_discovery_page.html" ]
+  outputs = [ "$target_gen_dir/shell_devtools_discovery_page.html" ]
+}
+
+electron_paks("packed_resources") {
+  if (is_mac) {
+    output_dir = "$root_gen_dir/electron_repack"
+    copy_data_to_bundle = true
+  } else {
+    output_dir = root_out_dir
+  }
 }
 
 mac_app_bundle("electron_app") {
@@ -342,6 +527,8 @@ mac_app_bundle("electron_app") {
         ":electron_app_framework_bundle_data",
         ":electron_app_resources",
         ":electron_app_plist",
+        ":electron_fuses",
+        "//sandbox/mac:seatbelt",
         "//electron/buildflags",
     ]
     extra_substitutions = [
@@ -396,6 +583,15 @@ copy("libcxx_headers") {
   sources = libcxx_headers + libcxx_licenses +
             [ "//buildtools/third_party/libc++/__config_site" ]
   outputs = [ "$target_gen_dir/electron_libcxx_include/{{source_root_relative_dir}}/{{source_file_part}}" ]
+}
+
+mksnapshot_deps = [
+  ":licenses",
+  "//v8:mksnapshot($v8_snapshot_toolchain)",
+]
+
+if (use_v8_context_snapshot) {
+  mksnapshot_deps += [ "//tools/v8_context_snapshot:v8_context_snapshot_generator($v8_snapshot_toolchain)" ]
 }
 
 dist_zip("libcxx_headers_zip") {

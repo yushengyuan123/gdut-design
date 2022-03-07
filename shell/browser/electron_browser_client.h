@@ -7,7 +7,12 @@
 #include <string>
 #include <vector>
 
+#include "base/files/file_path.h"
+#include "base/synchronization/lock.h"
 #include "content/public/browser/content_browser_client.h"
+#include "content/public/browser/render_process_host_observer.h"
+#include "content/public/browser/web_contents.h"
+
 
 
 namespace content {}
@@ -31,11 +36,15 @@ namespace electron {
       protected:
         std::unique_ptr<content::BrowserMainParts> CreateBrowserMainParts(content::MainFunctionParams params) override;        
 
+        void AppendExtraCommandLineSwitches(base::CommandLine* command_line,
+                                      int child_process_id) override;
+
       private:
 
         #if defined(OS_MAC)
           ElectronBrowserMainParts* browser_main_parts_ = nullptr;
         #endif
+
   };
 }
 
