@@ -16,10 +16,10 @@ template("webpack_build") {
     inputs = [
                invoker.config_file,
                "//electron/build/webpack/webpack.config.base.js",
-              #  "//electron/tsconfig.json",
+               "//electron/tsconfig.json",
                "//electron/yarn.lock",
-              #  "//electron/typings/internal-ambient.d.ts",
-              #  "//electron/typings/internal-electron.d.ts",
+               "//electron/typings/internal-ambient.d.ts",
+               "//electron/typings/internal-electron.d.ts",
              ] + invoker.inputs
 
     mode = "development"

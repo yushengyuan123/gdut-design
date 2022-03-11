@@ -10,6 +10,7 @@ import("filenames.auto.gni")
 import("filenames.libcxx.gni")
 import("filenames.libcxxabi.gni")
 import("electron_paks.gni")
+import("build/tsc.gni")
 import("//tools/v8_context_snapshot/v8_context_snapshot.gni")
 import("//v8/gni/snapshot_toolchain.gni")
 import("//tools/grit/grit_rule.gni")
@@ -21,14 +22,6 @@ electron_version = read_file("ELECTRON_VERSION", "trim string")
 electron_product_name = branding.product_name
 electron_project_name = branding.project_name
 
-
-#npm_action("build_electron_definitions") {
-#    script = "gn-typescript-definitions"
-#    args = [ rebase_path("$target_gen_dir/tsc/typings/electron.d.ts") ]
-#    inputs = auto_filenames.api_docs + [ "yarn.lock" ]
-#
-#    outputs = [ "$target_gen_dir/tsc/typings/electron.d.ts" ]
-#}
 
 declare_args() {
   use_prebuilt_v8_context_snapshot = false
@@ -52,7 +45,10 @@ npm_action("electron_version_args") {
 #          "Chrome extension support requires enable_extensions=true")
 # }
 
+v8_use_external_startup_data = true
+use_v8_context_snapshot = false
 
+target_gen_default_app_js = "$target_gen_dir/js/default_app"
 
 if (is_mac) {
     import("//build/config/mac/rules.gni")
@@ -253,17 +249,32 @@ bundle_data("electron_app_framework_bundle_data") {
    }
 }
 
-#typescript_build("default_app_js") {
-#    deps = [ ":build_electron_definitions" ]
-#
-#    sources = filenames.default_app_ts_sources
-#
-#    output_gen_dir = target_gen_default_app_js
-#    output_dir_name = "default_app"
-#    tsconfig = "tsconfig.default_app.json"
-#}
+typescript_build("default_app_js") {
+   deps = [ ":build_electron_definitions" ]
+
+   sources = filenames.default_app_ts_sources
+
+   output_gen_dir = target_gen_default_app_js
+   output_dir_name = "default_app"
+   tsconfig = "tsconfig.default_app.json"
+}
 
 target_gen_default_app_js = "$target_gen_dir/js/default_app"
+
+main_ts_compiler_js_path = target_gen_default_app_js + "/electron/default_app/main.js"
+packjson_path = "default_app/package.json"
+output_static_path = "$root_out_dir/Electron.app/main.js"
+
+
+copy("default_entry_files") {
+    deps = [":default_app_js"]
+
+    sources = [
+      main_ts_compiler_js_path,
+    ]
+
+    outputs = [output_static_path]
+}
 
 copy("default_app_static") {
     sources = filenames.default_app_static_sources
@@ -278,14 +289,14 @@ copy("default_app_octicon_deps") {
 # 把default_app目录下sources的几个产物，拷贝压缩到default_app.asar
 asar("default_app_asar") {
     deps = [
-#        ":default_app_js",
+       ":default_app_js",
 #        ":default_app_octicon_deps",
         ":default_app_static",
     ]
 
     root = "$target_gen_default_app_js/electron/default_app"
     sources =
-    #    get_target_outputs(":default_app_js") +
+       get_target_outputs(":default_app_js") +
     get_target_outputs(":default_app_static")
 #    get_target_outputs(":default_app_octicon_deps")
     outputs = [ "$root_out_dir/resources/default_app.asar" ]
@@ -294,6 +305,7 @@ asar("default_app_asar") {
 bundle_data("electron_app_resources") {
     public_deps = [
         ":default_app_asar",
+        # ":default_entry_files",
 #        ":electron_app_strings_bundle_data",
     ]
     sources = [
@@ -309,17 +321,26 @@ asar_hashed_info_plist("electron_app_plist") {
     plist_file = "shell/browser/resources/mac/Info.plist"
 }
 
-# npm_action("build_electron_definitions") {
-#   script = "gn-typescript-definitions111"
-#   args = [ rebase_path("$target_gen_dir/tsc/typings/electron.d.ts") ]
-#   inputs = auto_filenames.api_docs + [ "yarn.lock" ]
+npm_action("build_electron_definitions") {
+  script = "gn-typescript-definitions"
+  args = [ rebase_path("$target_gen_dir/tsc/typings/electron.d.ts") ]
+  inputs = auto_filenames.api_docs + [ "yarn.lock" ]
 
-#   outputs = [ "$target_gen_dir/tsc/typings/electron.d.ts" ]
-# }
+  outputs = [ "$target_gen_dir/tsc/typings/electron.d.ts" ]
+}
+
+webpack_build("electron_asar_bundle") {
+  deps = [ ":build_electron_definitions" ]
+
+  inputs = auto_filenames.asar_bundle_deps
+
+  config_file = "//electron/build/webpack/webpack.config.asar.js"
+  out_file = "$target_gen_dir/js2c/asar_bundle.js"
+}
 
 
 webpack_build("electron_browser_bundle") {
-#   deps = [ ":build_electron_definitions" ]
+  deps = [ ":build_electron_definitions" ]
 
   inputs = auto_filenames.browser_bundle_deps
 
@@ -330,18 +351,21 @@ webpack_build("electron_browser_bundle") {
 
 action("electron_js2c") {
   deps = [
+    ":electron_asar_bundle",
     ":electron_browser_bundle",
   ]
 
   sources = [
+    "$target_gen_dir/js2c/asar_bundle.js",
     "$target_gen_dir/js2c/browser_init.js",
   ]
 
   inputs = sources + [ "//third_party/electron_node/tools/js2c.py" ]
-  print("$root_gen_dir")
+
   outputs = [ "$root_gen_dir/electron_natives.cc" ]
 
   script = "build/js2c.py"
+
   args = [ rebase_path("//third_party/electron_node") ] +
          rebase_path(outputs, root_build_dir) +
          rebase_path(sources, root_build_dir)
@@ -403,9 +427,12 @@ source_set("electron_lib") {
         ":electron_generate_node_defines",
         ":electron_js2c",
         "chromium_src:chrome",
+        "//base:base_static",
+        "//base/allocator:buildflags",
         # 这个包似乎就是用来引入NSApplication这些东西
         "//content/common:mac_helpers",
         ":electron_version_header",
+        "//gin",
         ":resources",
         "//v8",
         "//v8:v8_libplatform",
@@ -468,6 +495,10 @@ source_set("electron_lib") {
             "//chrome/services/mac_notifications/public/mojom",
             "//components/printing/common:mojo_interfaces",
       ]
+    }
+
+    if (is_component_build) {
+      defines += [ "NODE_SHARED_MODE" ]
     }
 
     frameworks = [
@@ -585,6 +616,24 @@ copy("libcxx_headers") {
   outputs = [ "$target_gen_dir/electron_libcxx_include/{{source_root_relative_dir}}/{{source_file_part}}" ]
 }
 
+copy("electron_license") {
+  sources = [ "LICENSE" ]
+  outputs = [ "$root_build_dir/{{source_file_part}}" ]
+}
+
+copy("chromium_licenses") {
+  deps = [ "//components/resources:about_credits" ]
+  sources = [ "$root_gen_dir/components/resources/about_credits.html" ]
+  outputs = [ "$root_build_dir/LICENSES.chromium.html" ]
+}
+
+group("licenses") {
+  data_deps = [
+    ":chromium_licenses",
+    ":electron_license",
+  ]
+}
+
 mksnapshot_deps = [
   ":licenses",
   "//v8:mksnapshot($v8_snapshot_toolchain)",
@@ -602,6 +651,12 @@ dist_zip("libcxx_headers_zip") {
           "$root_out_dir")
 
   outputs = [ "$root_build_dir/libcxx_headers.zip" ]
+}
+
+dist_zip("electron_mksnapshot_zip") {
+  data_deps = mksnapshot_deps
+  print("haha$root_build_dir")
+  outputs = [ "$root_build_dir/mksnapshot.zip" ]
 }
 
 copy("libcxxabi_headers") {

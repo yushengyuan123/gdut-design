@@ -22,8 +22,11 @@ class FieldTrialList;
 }
 
 namespace electron {
+  class Browser;
   class ShellBrowserContext;
   class NodeBindings;
+  class JavascriptEnvironment;
+  class NodeEnvironment;
 
   // class Browser;
 
@@ -65,7 +68,11 @@ namespace electron {
   private:
     void PreCreateMainMessageLoopCommon();
 
+    std::unique_ptr<JavascriptEnvironment> js_env_;
+
     std::unique_ptr<NodeBindings> node_bindings_;
+
+    std::unique_ptr<NodeEnvironment> node_env_;
 
     std::unique_ptr<ShellBrowserContext> browser_context_;
 

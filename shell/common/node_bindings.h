@@ -21,16 +21,24 @@ namespace electron {
     public:
       enum class BrowserEnvironment { kBrowser, kRenderer, kWorker };
 
+      static void RegisterBuiltinModules();
+
+      static NodeBindings* Create(BrowserEnvironment browser_env);
+
+      virtual ~NodeBindings();
+
       // disable copy
       NodeBindings(const NodeBindings&) = delete;
       NodeBindings& operator=(const NodeBindings&) = delete;
 
       // Create the environment and load node.js.
-      // node::Environment* CreateEnvironment(v8::Handle<v8::Context> context,
-      //                                     node::MultiIsolatePlatform* platform);
+      node::Environment* CreateEnvironment(v8::Handle<v8::Context> context,
+                                          node::MultiIsolatePlatform* platform);
 
       // Load node.js in the environment.
-      void LoadEnvironment();                                    
+      void LoadEnvironment(node::Environment* env);            
+
+      node::IsolateData* isolate_data() const { return isolate_data_; }                        
 
       // Setup V8, libuv.
       void Initialize();
@@ -43,6 +51,8 @@ namespace electron {
       const BrowserEnvironment browser_env_;
 
       uv_loop_t* uv_loop_;  
+
+      node::IsolateData* isolate_data_ = nullptr;
   };
 }
 

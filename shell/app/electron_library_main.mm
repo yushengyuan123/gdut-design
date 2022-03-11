@@ -14,6 +14,7 @@ int ElectronMain(int argc, char* argv[]) {
 	content::ContentMainParams params(&delegate);
 	params.argc = argc;
 	params.argv = const_cast<const char**>(argv);
+	electron::ElectronCommandLine::Init(argc, argv);
 
 	return content::ContentMain(std::move(params));
 }

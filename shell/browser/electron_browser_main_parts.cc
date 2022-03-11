@@ -24,6 +24,7 @@
 #include "content/public/common/result_codes.h"
 
 #include "shell/browser/feature_list.h"
+#include "shell/browser/javascript_environment.h"
 #include "shell/common/node_bindings.h"
 #include "shell/common/node_includes.h"
 #include "shell/views/shell.h"
@@ -43,7 +44,9 @@ namespace electron {
   ElectronBrowserMainParts* ElectronBrowserMainParts::self_ = nullptr;
 
   ElectronBrowserMainParts::ElectronBrowserMainParts(
-      const content::MainFunctionParams& params) {
+      const content::MainFunctionParams& params):
+      node_bindings_(
+          NodeBindings::Create(NodeBindings::BrowserEnvironment::kBrowser)) {
       // : browser_(std::make_unique<Browser>()) {
     // DCHECK(!self_) << "Cannot have two ElectronBrowserMainParts";
     self_ = this;
@@ -65,16 +68,23 @@ namespace electron {
   }
 
   void ElectronBrowserMainParts::PostEarlyInitialization() {
+    js_env_ = std::make_unique<JavascriptEnvironment>(node_bindings_->uv_loop());
+
+    v8::HandleScope scope(js_env_->isolate());
+
     node_bindings_->Initialize();
 
-    node_bindings_->LoadEnvironment();
+    node::Environment* env = node_bindings_->CreateEnvironment(
+        js_env_->context(), js_env_->platform());
+
+    node_env_ = std::make_unique<NodeEnvironment>(env);
+
+    node_bindings_->LoadEnvironment(env);    
 
     InitializeFeatureList();
 
     // Initialize field trials.
     InitializeFieldTrials();
-
-    printf("PostEarlyInitializationEnd\n");
   }
 
   int ElectronBrowserMainParts::GetExitCode() const {

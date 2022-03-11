@@ -7,9 +7,148 @@
 #include <unordered_set>
 #include <utility>
 #include <vector>
+
+
+#include "base/base_paths.h"
+#include "base/command_line.h"
+#include "base/environment.h"
+#include "base/path_service.h"
+#include "base/run_loop.h"
+#include "base/strings/string_split.h"
+#include "base/strings/utf_string_conversions.h"
+#include "base/task/single_thread_task_runner.h"
+#include "base/threading/thread_task_runner_handle.h"
+#include "base/trace_event/trace_event.h"
+#include "content/public/browser/browser_thread.h"
+#include "content/public/common/content_paths.h"
+#include "electron/buildflags/buildflags.h"
+#include "electron/fuses.h"
+#include "shell/common/electron_command_line.h"
+#include "shell/common/mac/main_application_bundle.h"
 // 有一个奇怪的问题加上这个头文件居然就可以使用node内部方法了
 // 总之就很神奇
 #include "shell/common/node_includes.h"
+#include "third_party/blink/renderer/bindings/core/v8/v8_initializer.h"
+
+#define ELECTRON_BUILTIN_MODULES(V)      \
+  V(electron_browser_app)                \
+
+#define V(modname) void _register_##modname();
+ELECTRON_BUILTIN_MODULES(V)
+
+#undef V
+
+
+namespace {
+  bool g_is_initialized = false;
+
+  const std::unordered_set<base::StringPiece, base::StringPieceHash>
+  GetAllowedDebugOptions() {
+    if (electron::fuses::IsNodeCliInspectEnabled()) {
+      // Only allow DebugOptions in non-ELECTRON_RUN_AS_NODE mode
+      return {
+          "--inspect",          "--inspect-brk",
+          "--inspect-port",     "--debug",
+          "--debug-brk",        "--debug-port",
+          "--inspect-brk-node", "--inspect-publish-uid",
+      };
+    }
+    // If node CLI inspect support is disabled, allow no debug options.
+    return {};
+  }
+
+  void SetNodeCliFlags() {
+    const std::unordered_set<base::StringPiece, base::StringPieceHash> allowed =
+        GetAllowedDebugOptions();
+
+    const auto argv = base::CommandLine::ForCurrentProcess()->argv();
+    std::vector<std::string> args;
+
+    // TODO(codebytere): We need to set the first entry in args to the
+    // process name owing to src/node_options-inl.h#L286-L290 but this is
+    // redundant and so should be refactored upstream.
+    args.reserve(argv.size() + 1);
+    args.emplace_back("electron");
+
+    for (const auto& arg : argv) {
+  #if defined(OS_WIN)
+      const auto& option = base::WideToUTF8(arg);
+  #else
+      const auto& option = arg;
+  #endif
+      const auto stripped = base::StringPiece(option).substr(0, option.find('='));
+
+      // Only allow in no-op (--) option or DebugOptions
+      if (allowed.count(stripped) != 0 || stripped == "--")
+        args.push_back(option);
+    }
+
+    std::vector<std::string> errors;
+    const int exit_code = ProcessGlobalArgs(&args, nullptr, &errors,
+                                            node::kDisallowedInEnvironment);
+
+    const std::string err_str = "Error parsing Node.js cli flags ";
+    if (exit_code != 0) {
+      std::cout << exit_code << std::endl;
+    } else if (!errors.empty()) {
+      std::cout << err_str << base::JoinString(errors, " ") << std::endl;
+    }
+    
+  }
+
+  void SetNodeOptions(base::Environment* env) {
+    // // Options that are unilaterally disallowed
+    // const std::set<std::string> disallowed = {
+    //     "--openssl-config", "--use-bundled-ca", "--use-openssl-ca",
+    //     "--force-fips", "--enable-fips"};
+
+    // // Subset of options allowed in packaged apps
+    // const std::set<std::string> allowed_in_packaged = {"--max-http-header-size",
+    //                                                   "--http-parser"};
+
+    // if (env->HasVar("NODE_OPTIONS")) {
+    //   if (electron::fuses::IsNodeOptionsEnabled()) {
+    //     std::string options;
+    //     env->GetVar("NODE_OPTIONS", &options);
+    //     std::vector<std::string> parts = base::SplitString(
+    //         options, " ", base::TRIM_WHITESPACE, base::SPLIT_WANT_NONEMPTY);
+
+    //     bool is_packaged_app = electron::api::App::IsPackaged();
+
+    //     for (const auto& part : parts) {
+    //       // Strip off values passed to individual NODE_OPTIONs
+    //       std::string option = part.substr(0, part.find('='));
+
+    //       if (is_packaged_app &&
+    //           allowed_in_packaged.find(option) == allowed_in_packaged.end()) {
+    //         // Explicitly disallow majority of NODE_OPTIONS in packaged apps
+    //         LOG(ERROR) << "Most NODE_OPTIONs are not supported in packaged apps."
+    //                   << " See documentation for more details.";
+    //         options.erase(options.find(option), part.length());
+    //       } else if (disallowed.find(option) != disallowed.end()) {
+    //         // Remove NODE_OPTIONS specifically disallowed for use in Node.js
+    //         // through Electron owing to constraints like BoringSSL.
+    //         LOG(ERROR) << "The NODE_OPTION " << option
+    //                   << " is not supported in Electron";
+    //         options.erase(options.find(option), part.length());
+    //       }
+    //     }
+
+    //     // overwrite new NODE_OPTIONS without unsupported variables
+    //     env->SetVar("NODE_OPTIONS", options);
+    //   } else {
+    //     LOG(ERROR) << "NODE_OPTIONS have been disabled in this app";
+    //     env->SetVar("NODE_OPTIONS", "");
+    //   }
+    // }
+
+  }
+
+}
+
+
+
+
 
 namespace electron {
   namespace {
@@ -20,182 +159,114 @@ namespace electron {
 
   NodeBindings::NodeBindings(BrowserEnvironment browser_env)
       : browser_env_(browser_env) {
-    // 初始化libuv    
+    // 初始化libuv 
     if (browser_env == BrowserEnvironment::kWorker) {
       // uv_loop_init(&worker_loop_);
       // uv_loop_ = &worker_loop_;
       printf("init kworker\n");
-    } else {
+    } else {  
       uv_loop_ = uv_default_loop();
     }
   }
 
-  void NodeBindings::LoadEnvironment() {
-    node::LoadEnvironment();
+  NodeBindings::~NodeBindings() {
+  }
+
+  void NodeBindings::LoadEnvironment(node::Environment* env) {
+    node::LoadEnvironment(env, node::StartExecutionCallback{});
     // gin_helper::EmitEvent(env->isolate(), env->process_object(), "loaded");
   }
 
-  // node::Environment* NodeBindings::CreateEnvironment(
-  //     v8::Handle<v8::Context> context,
-  //     node::MultiIsolatePlatform* platform) {
+  node::Environment* NodeBindings::CreateEnvironment(
+      v8::Handle<v8::Context> context,
+      node::MultiIsolatePlatform* platform) {
+    auto args = ElectronCommandLine::argv();    
+    
+    // Feed node the path to initialization script.
+    std::string process_type;
+    switch (browser_env_) {
+      case BrowserEnvironment::kBrowser:
+        process_type = "browser";
+        break;
+      case BrowserEnvironment::kRenderer:
+        process_type = "renderer";
+        break;
+      case BrowserEnvironment::kWorker:
+        process_type = "worker";
+        break;
+    }
 
-  //   auto args = ElectronCommandLine::argv();
+    std::vector<std::string> exec_args;
+    base::FilePath resources_path = GetResourcesPath();
 
-  //   // Feed node the path to initialization script.
-  //   std::string process_type;
-  //   switch (browser_env_) {
-  //     case BrowserEnvironment::kBrowser:
-  //       process_type = "browser";
-  //       break;
-  //     case BrowserEnvironment::kRenderer:
-  //       process_type = "renderer";
-  //       break;
-  //     case BrowserEnvironment::kWorker:
-  //       process_type = "worker";
-  //       break;
-  //   }
+    std::string init_script = "electron/js2c/" + process_type + "_init";
 
-  //   v8::Isolate* isolate = context->GetIsolate();
-  //   gin_helper::Dictionary global(isolate, context->Global());
-  //   // Do not set DOM globals for renderer process.
-  //   // We must set this before the node bootstrapper which is run inside
-  //   // CreateEnvironment
-  //   if (browser_env_ != BrowserEnvironment::kBrowser)
-  //     global.Set("_noBrowserGlobals", true);
+    args.insert(args.begin() + 1, init_script);
 
-  //   if (browser_env_ == BrowserEnvironment::kBrowser) {
-  //     const std::vector<std::string> search_paths = {"app.asar", "app",
-  //                                                   "default_app.asar"};
-  //     const std::vector<std::string> app_asar_search_paths = {"app.asar"};
-  //     context->Global()->SetPrivate(
-  //         context,
-  //         v8::Private::ForApi(
-  //             isolate,
-  //             gin::ConvertToV8(isolate, "appSearchPaths").As<v8::String>()),
-  //         gin::ConvertToV8(isolate,
-  //                         electron::fuses::IsOnlyLoadAppFromAsarEnabled()
-  //                             ? app_asar_search_paths
-  //                             : search_paths));
-  //   }
+    isolate_data_ =
+        node::CreateIsolateData(context->GetIsolate(), uv_loop_, platform);
 
-  //   std::vector<std::string> exec_args;
-  //   base::FilePath resources_path = GetResourcesPath();
-  //   std::string init_script = "electron/js2c/" + process_type + "_init";
+    node::Environment* env;
+    uint64_t flags =  node::EnvironmentFlags::kDefaultFlags |
+                      node::EnvironmentFlags::kHideConsoleWindows |
+                      node::EnvironmentFlags::kNoGlobalSearchPaths;             
 
-  //   args.insert(args.begin() + 1, init_script);
 
-  //   isolate_data_ =
-  //       node::CreateIsolateData(context->GetIsolate(), uv_loop_, platform);
+    if (browser_env_ != BrowserEnvironment::kBrowser) {
+      // Only one ESM loader can be registered per isolate -
+      // in renderer processes this should be blink. We need to tell Node.js
+      // not to register its handler (overriding blinks) in non-browser processes.
+      flags |= node::EnvironmentFlags::kNoRegisterESMLoader |
+              node::EnvironmentFlags::kNoInitializeInspector;
+      v8::TryCatch try_catch(context->GetIsolate());
+      env = node::CreateEnvironment(
+          isolate_data_, context, args, exec_args,
+          static_cast<node::EnvironmentFlags::Flags>(flags));
+      DCHECK(env);
 
-  //   node::Environment* env;
-  //   uint64_t flags = node::EnvironmentFlags::kDefaultFlags |
-  //                   node::EnvironmentFlags::kHideConsoleWindows |
-  //                   node::EnvironmentFlags::kNoGlobalSearchPaths;
+      // This will only be caught when something has gone terrible wrong as all
+      // electron scripts are wrapped in a try {} catch {} by webpack
+      if (try_catch.HasCaught()) {
+        std::cout << "Failed to initialize node environment in process: " << process_type << std::endl;
+      }
+    } else {
+      env = node::CreateEnvironment(
+          isolate_data_, context, args, exec_args,
+          static_cast<node::EnvironmentFlags::Flags>(flags));
+      DCHECK(env);
+    }
+     
+    return env;
+  }
 
-  //   if (browser_env_ != BrowserEnvironment::kBrowser) {
-  //     // Only one ESM loader can be registered per isolate -
-  //     // in renderer processes this should be blink. We need to tell Node.js
-  //     // not to register its handler (overriding blinks) in non-browser processes.
-  //     flags |= node::EnvironmentFlags::kNoRegisterESMLoader |
-  //             node::EnvironmentFlags::kNoInitializeInspector;
-  //     v8::TryCatch try_catch(context->GetIsolate());
-  //     env = node::CreateEnvironment(
-  //         isolate_data_, context, args, exec_args,
-  //         static_cast<node::EnvironmentFlags::Flags>(flags));
-  //     DCHECK(env);
-
-  //     // This will only be caught when something has gone terrible wrong as all
-  //     // electron scripts are wrapped in a try {} catch {} by webpack
-  //     if (try_catch.HasCaught()) {
-  //       LOG(ERROR) << "Failed to initialize node environment in process: "
-  //                 << process_type;
-  //     }
-  //   } else {
-  //     env = node::CreateEnvironment(
-  //         isolate_data_, context, args, exec_args,
-  //         static_cast<node::EnvironmentFlags::Flags>(flags));
-  //     DCHECK(env);
-  //   }
-
-  //   // Clean up the global _noBrowserGlobals that we unironically injected into
-  //   // the global scope
-  //   if (browser_env_ != BrowserEnvironment::kBrowser) {
-  //     // We need to bootstrap the env in non-browser processes so that
-  //     // _noBrowserGlobals is read correctly before we remove it
-  //     global.Delete("_noBrowserGlobals");
-  //   }
-
-  //   node::IsolateSettings is;
-
-  //   // Use a custom fatal error callback to allow us to add
-  //   // crash message and location to CrashReports.
-  //   is.fatal_error_callback = V8FatalErrorCallback;
-
-  //   // We don't want to abort either in the renderer or browser processes.
-  //   // We already listen for uncaught exceptions and handle them there.
-  //   is.should_abort_on_uncaught_exception_callback = [](v8::Isolate*) {
-  //     return false;
-  //   };
-
-  //   // Use a custom callback here to allow us to leverage Blink's logic in the
-  //   // renderer process.
-  //   is.allow_wasm_code_generation_callback = AllowWasmCodeGenerationCallback;
-
-  //   if (browser_env_ == BrowserEnvironment::kBrowser) {
-  //     // Node.js requires that microtask checkpoints be explicitly invoked.
-  //     is.policy = v8::MicrotasksPolicy::kExplicit;
-  //   } else {
-  //     // Blink expects the microtasks policy to be kScoped, but Node.js expects it
-  //     // to be kExplicit. In the renderer, there can be many contexts within the
-  //     // same isolate, so we don't want to change the existing policy here, which
-  //     // could be either kExplicit or kScoped depending on whether we're executing
-  //     // from within a Node.js or a Blink entrypoint. Instead, the policy is
-  //     // toggled to kExplicit when entering Node.js through UvRunOnce.
-  //     is.policy = context->GetIsolate()->GetMicrotasksPolicy();
-
-  //     // We do not want to use Node.js' message listener as it interferes with
-  //     // Blink's.
-  //     is.flags &= ~node::IsolateSettingsFlags::MESSAGE_LISTENER_WITH_ERROR_LEVEL;
-
-  //     // Isolate message listeners are additive (you can add multiple), so instead
-  //     // we add an extra one here to ensure that the async hook stack is properly
-  //     // cleared when errors are thrown.
-  //     context->GetIsolate()->AddMessageListenerWithErrorLevel(
-  //         ErrorMessageListener, v8::Isolate::kMessageError);
-
-  //     // We do not want to use the promise rejection callback that Node.js uses,
-  //     // because it does not send PromiseRejectionEvents to the global script
-  //     // context. We need to use the one Blink already provides.
-  //     is.flags |=
-  //         node::IsolateSettingsFlags::SHOULD_NOT_SET_PROMISE_REJECTION_CALLBACK;
-
-  //     // We do not want to use the stack trace callback that Node.js uses,
-  //     // because it relies on Node.js being aware of the current Context and
-  //     // that's not always the case. We need to use the one Blink already
-  //     // provides.
-  //     is.flags |=
-  //         node::IsolateSettingsFlags::SHOULD_NOT_SET_PREPARE_STACK_TRACE_CALLBACK;
-  //   }
-
-  //   node::SetIsolateUpForNode(context->GetIsolate(), is);
-
-  //   gin_helper::Dictionary process(context->GetIsolate(), env->process_object());
-  //   process.SetReadOnly("type", process_type);
-  //   process.Set("resourcesPath", resources_path);
-  //   // The path to helper app.
-  //   base::FilePath helper_exec_path;
-  //   base::PathService::Get(content::CHILD_PROCESS_EXE, &helper_exec_path);
-  //   process.Set("helperExecPath", helper_exec_path);
-
-  //   return env;
-  // }
+  void NodeBindings::RegisterBuiltinModules() {
+  #define V(modname) _register_##modname();
+    ELECTRON_BUILTIN_MODULES(V)
+  #undef V  
+  }
 
   void NodeBindings::Initialize() {
+    // Explicitly register electron's builtin modules.
+    RegisterBuiltinModules();
+
+    // Parse and set Node.js cli flags.
+    SetNodeCliFlags();
+
+    auto env = base::Environment::Create();
+    SetNodeOptions(env.get());
+
     std::vector<std::string> argv = {"electron"};
     std::vector<std::string> exec_argv;
     std::vector<std::string> errors;
     // 初始化node的核心模块
     int exit_code = node::InitializeNodeWithArgs(&argv, &exec_argv, &errors);
-    printf("caonima:%d\n", exit_code);
+
+    for (const std::string& error : errors)
+      fprintf(stderr, "%s: %s\n", argv[0].c_str(), error.c_str());
+
+    if (exit_code != 0)
+      exit(exit_code);
+
+    g_is_initialized = true;  
   }
 }
