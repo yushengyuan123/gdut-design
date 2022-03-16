@@ -261,21 +261,6 @@ typescript_build("default_app_js") {
 
 target_gen_default_app_js = "$target_gen_dir/js/default_app"
 
-main_ts_compiler_js_path = target_gen_default_app_js + "/electron/default_app/main.js"
-packjson_path = "default_app/package.json"
-output_static_path = "$root_out_dir/Electron.app/main.js"
-
-
-copy("default_entry_files") {
-    deps = [":default_app_js"]
-
-    sources = [
-      main_ts_compiler_js_path,
-    ]
-
-    outputs = [output_static_path]
-}
-
 copy("default_app_static") {
     sources = filenames.default_app_static_sources
     outputs = [ "$target_gen_default_app_js/{{source}}" ]
@@ -305,7 +290,6 @@ asar("default_app_asar") {
 bundle_data("electron_app_resources") {
     public_deps = [
         ":default_app_asar",
-        # ":default_entry_files",
 #        ":electron_app_strings_bundle_data",
     ]
     sources = [
@@ -345,7 +329,6 @@ webpack_build("electron_browser_bundle") {
   inputs = auto_filenames.browser_bundle_deps
 
   config_file = "//electron/build/webpack/webpack.config.browser.js"
-  print("$target_gen_dir")
   out_file = "$target_gen_dir/js2c/browser_init.js"
 }
 
@@ -655,7 +638,6 @@ dist_zip("libcxx_headers_zip") {
 
 dist_zip("electron_mksnapshot_zip") {
   data_deps = mksnapshot_deps
-  print("haha$root_build_dir")
   outputs = [ "$root_build_dir/mksnapshot.zip" ]
 }
 

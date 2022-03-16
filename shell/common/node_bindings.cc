@@ -24,6 +24,8 @@
 #include "electron/buildflags/buildflags.h"
 #include "electron/fuses.h"
 #include "shell/common/electron_command_line.h"
+#include "shell/common/gin_converters/file_path_converter.h"
+#include "shell/common/gin_helper/dictionary.h"
 #include "shell/common/mac/main_application_bundle.h"
 // 有一个奇怪的问题加上这个头文件居然就可以使用node内部方法了
 // 总之就很神奇
@@ -32,6 +34,9 @@
 
 #define ELECTRON_BUILTIN_MODULES(V)      \
   V(electron_browser_app)                \
+  V(electron_browser_window)             \
+  V(electron_common_asar)                \
+  V(electron_common_v8_util)             \
 
 #define V(modname) void _register_##modname();
 ELECTRON_BUILTIN_MODULES(V)
@@ -196,6 +201,23 @@ namespace electron {
         break;
     }
 
+    v8::Isolate* isolate = context->GetIsolate();
+
+    if (browser_env_ == BrowserEnvironment::kBrowser) {
+      const std::vector<std::string> search_paths = {"app.asar", "app",
+                                                    "default_app.asar"};
+      const std::vector<std::string> app_asar_search_paths = {"app.asar"};
+      context->Global()->SetPrivate(
+          context,
+          v8::Private::ForApi(
+              isolate,
+              gin::ConvertToV8(isolate, "appSearchPaths").As<v8::String>()),
+          gin::ConvertToV8(isolate,
+                          electron::fuses::IsOnlyLoadAppFromAsarEnabled()
+                              ? app_asar_search_paths
+                              : search_paths));
+    }
+
     std::vector<std::string> exec_args;
     base::FilePath resources_path = GetResourcesPath();
 
@@ -204,7 +226,7 @@ namespace electron {
     args.insert(args.begin() + 1, init_script);
 
     isolate_data_ =
-        node::CreateIsolateData(context->GetIsolate(), uv_loop_, platform);
+        node::CreateIsolateData(isolate, uv_loop_, platform);
 
     node::Environment* env;
     uint64_t flags =  node::EnvironmentFlags::kDefaultFlags |
@@ -235,6 +257,10 @@ namespace electron {
           static_cast<node::EnvironmentFlags::Flags>(flags));
       DCHECK(env);
     }
+
+    gin_helper::Dictionary process(context->GetIsolate(), env->process_object());
+
+    process.Set("resourcesPath", resources_path);
      
     return env;
   }

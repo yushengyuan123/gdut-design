@@ -2,9 +2,10 @@
  * 这个main.ts文件中正式加载用户的js代码
  */
 import * as path from "path"
-const Module = require('module')
-let packagePath = null
 
+const Module = require('module')
+
+let packagePath = null
 let debug = true
 
 interface jsonProperties {
@@ -24,7 +25,7 @@ function loadApplicationPackage(packagePath: string) {
 
 if (debug) {
   packagePath = '/Users/yushengyuan/yushengyuan/study/chromium1/src/electron/'
-  const entryDir = "my_apllication"
+  const entryDir = "electron-web-builder"
 
   if (packagePath) {
     loadApplicationPackage(path.join(packagePath, entryDir))

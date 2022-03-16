@@ -12,16 +12,7 @@ namespace electron {
   namespace api {
     BaseWindow::BaseWindow(v8::Isolate* isolate,
                           const gin_helper::Dictionary& options) {
-      // The parent window.
-      gin::Handle<BaseWindow> parent;
-      // if (options.Get("parent", &parent) && !parent.IsEmpty())
-      //   parent_window_.Reset(isolate, parent.ToV8());
 
-
-      // Creates NativeWindow.
-      window_.reset(NativeWindow::Create(
-          options, parent.IsEmpty() ? nullptr : parent->window_.get()));
-      window_->AddObserver(this);
     }   
 
     BaseWindow::BaseWindow(gin_helper::Arguments* args,

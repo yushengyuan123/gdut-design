@@ -1,5 +1,6 @@
 import { browserModuleList } from '@electron/internal/browser/api/module-list';
 
+
 module.exports = {};
 
 const handleESModule = (loader: ElectronInternal.ModuleLoader) => () => {

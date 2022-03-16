@@ -1,3 +1,5 @@
+/// <reference path="../electron.d.ts" />
+
 declare namespace Electron {
 
 }

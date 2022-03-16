@@ -61,7 +61,6 @@ namespace electron {
   }
 
   int ElectronBrowserMainParts::PreEarlyInitialization() {
-    printf("PreEarlyInitialization\n");
     field_trial_list_ = std::make_unique<base::FieldTrialList>(nullptr);
 
     return GetExitCode();

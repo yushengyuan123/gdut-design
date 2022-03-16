@@ -41,8 +41,6 @@ declare namespace NodeJS {
   interface Process {
     noAsar: boolean;
 
-    type: string;
-
     internalBinding?(name: string): any;
 
     _linkedBinding(name: string): any;

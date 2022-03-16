@@ -14,10 +14,9 @@
 #include "content/public/browser/browser_task_traits.h"
 #include "content/public/browser/browser_thread.h"
 #include "gin/handle.h"
-#include "shell/browser/native_window.h"
-#include "shell/browser/native_window_observer.h"
+
 #include "shell/common/gin_helper/arguments.h"
-#include "shell/browser/ui/inspectable_web_contents_view.h"
+#include "shell/common/gin_helper/dictionary.h"
 
 namespace electron {
 
@@ -25,24 +24,20 @@ namespace api {
 
 class View;
 
-  class BaseWindow : public NativeWindowObserver {
-    public:
-      NativeWindow* window() const { return window_.get(); }
+class BaseWindow {
+ public:
 
-    protected:
-      // Common constructor.
-      BaseWindow(v8::Isolate* isolate, const gin_helper::Dictionary& options);
-      
-      // Creating independent BaseWindow instance.
-      BaseWindow(gin_helper::Arguments* args,
-                const gin_helper::Dictionary& options);
 
-      ~BaseWindow() override;
+ protected:
+  // Common constructor.
+  BaseWindow(v8::Isolate* isolate, const gin_helper::Dictionary& options);
 
-      v8::Global<v8::Value> parent_window_;
+  // Creating independent BaseWindow instance.
+  BaseWindow(gin_helper::Arguments* args,
+             const gin_helper::Dictionary& options);
 
-      std::unique_ptr<NativeWindow> window_;    
-  };  // namespace electron
+  ~BaseWindow();
+};  // namespace electron
 }  // namespace api
 }  // namespace electron
 

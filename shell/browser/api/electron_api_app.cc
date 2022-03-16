@@ -24,7 +24,6 @@ namespace {
                   v8::Local<v8::Value> unused,
                   v8::Local<v8::Context> context,
                   void* priv) {
-    printf("hello world! electron Initialize\n");
     v8::Local<v8::String> key = v8::String::NewFromUtf8Literal(context->GetIsolate(),"name");
     v8::Local<v8::String> name = v8::String::NewFromUtf8Literal(context->GetIsolate(), "tony");
 

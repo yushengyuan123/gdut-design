@@ -146,6 +146,8 @@ auto_filenames = {
     "lib/browser/api/app.ts",
     "lib/browser/api/exports/electron.ts",
     "lib/browser/init.ts",
+    "lib/browser/api/browser-window.ts",
+    "lib/browser/api/module-list.ts",
     "package.json",
     "tsconfig.electron.json",
     "tsconfig.json",
@@ -153,7 +155,7 @@ auto_filenames = {
     "typings/internal-electron.d.ts",
   ]
 
-    asar_bundle_deps = [
+  asar_bundle_deps = [
     "lib/asar/fs-wrapper.ts",
     "lib/asar/init.ts",
     "lib/common/webpack-provider.ts",
