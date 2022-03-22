@@ -32,14 +32,8 @@ namespace electron {
                                          styleMask:style_mask
                                            backing:NSBackingStoreBuffered
                                              defer:NO];
-    [window makeKeyAndOrderFront:nil];
 
     shell_data.window = window;
-  }
-
-  void ShellPlatformDelegate::SetContents(Shell* shell) {
-    DCHECK(base::Contains(shell_data_map_, shell));
-    ShellData& shell_data = shell_data_map_[shell];
 
     NSView* web_view = shell->web_contents()->GetNativeView().GetNativeNSView();
     [web_view setAutoresizingMask:(NSViewWidthSizable | NSViewHeightSizable)];
@@ -50,6 +44,26 @@ namespace electron {
     NSRect frame = [content bounds];
 
     [web_view setFrame:frame];
-    [web_view setNeedsDisplay:YES];
+    [web_view setNeedsDisplay:YES];                                         
+
+
+    [window makeKeyAndOrderFront:nil];
+  }
+
+  void ShellPlatformDelegate::SetContents(Shell* shell) {
+    // DCHECK(base::Contains(shell_data_map_, shell));
+    // ShellData& shell_data = shell_data_map_[shell];
+
+    // NSView* web_view = shell->web_contents()->GetNativeView().GetNativeNSView();
+    // [web_view setAutoresizingMask:(NSViewWidthSizable | NSViewHeightSizable)];
+
+    // NSView* content = [shell_data.window.GetNativeNSWindow() contentView];
+    // [content addSubview:web_view];
+
+    // NSRect frame = [content bounds];
+
+    // [web_view setFrame:frame];
+    // [web_view setNeedsDisplay:YES];
+    // [shell_data.window makeKeyAndOrderFront:nil];
   }
 }

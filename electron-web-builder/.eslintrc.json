@@ -1,0 +1,14 @@
+{
+  "extends": "eslint:recommended",
+  "parserOptions": {
+    "ecmaVersion": 6
+  },
+  "rules": {
+    "indent": ["error", 2],
+    "no-unused-vars": "off"
+  },
+  "parser": "@typescript-eslint/parser",
+  "env": {
+    "node": true
+  }
+}

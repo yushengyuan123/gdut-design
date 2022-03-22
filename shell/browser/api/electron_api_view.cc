@@ -13,7 +13,6 @@ namespace electron {
 namespace api {
 
 View::View(views::View* view) : view_(view) {
-  printf("View执行\n");
   view_->set_owned_by_client();
 }
 

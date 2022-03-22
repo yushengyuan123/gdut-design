@@ -17,6 +17,13 @@
   devtools_is_first_responder_ = NO;
   attached_to_window_ = NO;
 
+  auto* contents =
+      inspectableWebContentsView_->inspectable_web_contents()->GetWebContents();
+  auto* contentsView = contents->GetNativeView().GetNativeNSView();
+  [contentsView setAutoresizingMask:NSViewWidthSizable | NSViewHeightSizable];
+  [self addSubview:contentsView];
+  [self setWantsLayer:YES];
+
   return self;
 }
 

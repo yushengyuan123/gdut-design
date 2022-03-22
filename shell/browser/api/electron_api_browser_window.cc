@@ -24,11 +24,9 @@ namespace electron {
 namespace api {
 BrowserWindow::BrowserWindow(gin::Arguments* args,
                              const gin_helper::Dictionary& options)
-  : BaseWindow(args->isolate(), options) {
-  printf("01111\n");   
+  : BaseWindow(args->isolate(), options) {  
   v8::Isolate* isolate = args->isolate();
 
-  printf("01\n");   
   gin_helper::Dictionary web_preferences =
       gin::Dictionary::CreateEmpty(isolate);
   options.Get(options::kWebPreferences, &web_preferences);
@@ -90,7 +88,7 @@ BrowserWindow::BrowserWindow(gin::Arguments* args,
       web_contents_view->GetWebContents(isolate);
 
   web_contents_.Reset(isolate, web_contents.ToV8()); 
-  // api_web_contents_ = web_contents->GetWeakPtr();  
+  api_web_contents_ = web_contents->GetWeakPtr();  
 
   // web_contents->SetOwnerWindow(window());
 
@@ -101,6 +99,7 @@ BrowserWindow::BrowserWindow(gin::Arguments* args,
   OverrideNSWindowContentView(
       web_contents->inspectable_web_contents()->GetView()); 
 
+  window()->InitFromOptions(options);
 }
 
 BrowserWindow::~BrowserWindow() {
@@ -130,7 +129,6 @@ gin_helper::WrappableBase* BrowserWindow::New(gin_helper::ErrorThrower thrower,
 v8::Local<v8::Value> BrowserWindow::GetWebContents(v8::Isolate* isolate) {
   if (web_contents_.IsEmpty())
     return v8::Null(isolate);
-  printf("caoniamne11\n");  
   return v8::Local<v8::Value>::New(isolate, web_contents_);
 }
 

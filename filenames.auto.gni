@@ -148,6 +148,7 @@ auto_filenames = {
     "lib/browser/init.ts",
     "lib/browser/api/browser-window.ts",
     "lib/browser/api/module-list.ts",
+    "lib/browser/api/web-contents.ts",
     "package.json",
     "tsconfig.electron.json",
     "tsconfig.json",

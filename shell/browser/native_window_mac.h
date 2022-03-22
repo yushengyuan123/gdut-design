@@ -42,6 +42,8 @@ namespace electron {
 
       ElectronPreviewItem* preview_item() const { return preview_item_.get(); }
 
+      void Show() override;
+
 
     protected:
       base::scoped_nsobject<NSView> container_view_;

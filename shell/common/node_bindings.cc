@@ -40,7 +40,8 @@
   V(electron_browser_web_contents_view)  \
   V(electron_common_asar)                \
   V(electron_common_v8_util)             \
-
+  V(electron_browser_web_contents)       \
+  
 #define V(modname) void _register_##modname();
 ELECTRON_BUILTIN_MODULES(V)
 

@@ -35,13 +35,15 @@ class NativeWindow : public base::SupportsUserData,
   static NativeWindow* Create(const gin_helper::Dictionary& options,
                               NativeWindow* parent = nullptr);
 
-  // virtual void Show() = 0;
+  virtual void Show() = 0;
 
   virtual extensions::SizeConstraints GetSizeConstraints() const;
 
   virtual extensions::SizeConstraints GetContentSizeConstraints() const;
 
   virtual gfx::Size GetMaximumSize() const;
+
+  void InitFromOptions(const gin_helper::Dictionary& options);
 
   // Converts between content bounds and window bounds.
   virtual gfx::Rect ContentBoundsToWindowBounds(

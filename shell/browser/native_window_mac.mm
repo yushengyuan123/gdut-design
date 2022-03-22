@@ -140,7 +140,6 @@ NativeWindowMac::NativeWindowMac(const gin_helper::Dictionary& options,
   SetContentView(new views::View());
   AddContentViewLayers();
 
-  // [window_ makeKeyAndOrderFront:nil];
 }
 
 void NativeWindowMac::OnNativeThemeUpdated(ui::NativeTheme* observed_theme) {}
@@ -154,6 +153,10 @@ void NativeWindowMac::SetContentView(views::View* view) {
   root_view->AddChildView(content_view());
 
   root_view->Layout();
+}
+
+void NativeWindowMac::Show() {
+  [window_ makeKeyAndOrderFront:nil];
 }
 
 void NativeWindowMac::OverrideNSWindowContentView() {
@@ -253,7 +256,6 @@ gfx::Rect NativeWindowMac::ContentBoundsToWindowBounds(
 // static
 NativeWindow* NativeWindow::Create(const gin_helper::Dictionary& options,
                                    NativeWindow* parent) {
-  NSLog(@"NativeWindow::Create");
   return new NativeWindowMac(options, parent);
 }
 

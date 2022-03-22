@@ -20,6 +20,7 @@
 #include "shell/browser/electron_browser_context.h"
 #include "shell/browser/native_window.h"
 #include "shell/browser/ui/inspectable_web_contents_view.h"
+#include "shell/common/gin_converters/gurl_converter.h"
 #include "shell/common/gin_helper/dictionary.h"
 #include "shell/common/gin_helper/event_emitter_caller.h"
 #include "shell/common/gin_helper/object_template_builder.h"
@@ -129,10 +130,8 @@ void WebContents::InitWithSessionAndOptions(
 
 void WebContents::LoadURL(const GURL& url,
                           const gin_helper::Dictionary& options) {
-                            printf("loadUrl\n");
-  content::NavigationController::LoadURLParams params(url);
-  web_contents()->GetController().LoadURLWithParams(params);
-  printf("loadUrl ENd\n");
+  content::NavigationController::LoadURLParams params(url);                           
+  GetWebContents()->GetController().LoadURLWithParams(params);
 }
 
 void WebContents::InitWithWebContents(
@@ -180,12 +179,9 @@ void WebContents::SetOwnerWindow(content::WebContents* web_contents,
 }
 
 content::WebContents* WebContents::GetWebContents() const {
-  printf("GetWebContents\n");
   if (!inspectable_web_contents_) {
-    printf("GetWebContents1\n");
     return nullptr;
   }
-  printf("GetWebContents2\n");
   return inspectable_web_contents_->GetWebContents();
 }
 
@@ -193,6 +189,7 @@ content::WebContents* WebContents::GetWebContents() const {
 gin::Handle<WebContents> WebContents::New(
     v8::Isolate* isolate,
     const gin_helper::Dictionary& options) {
+        printf("WebContents::New\n");
   gin::Handle<WebContents> handle =
       gin::CreateHandle(isolate, new WebContents(isolate, options));
   v8::TryCatch try_catch(isolate);
@@ -202,6 +199,45 @@ gin::Handle<WebContents> WebContents::New(
   }
   return handle;
 }
+
+// static
+v8::Local<v8::ObjectTemplate> WebContents::FillObjectTemplate(
+    v8::Isolate* isolate,
+    v8::Local<v8::ObjectTemplate> templ) {
+      printf("FillObjectTemplate\n");
+  gin::InvokerOptions options;
+  options.holder_is_first_argument = true;
+  options.holder_type = "WebContents";
+  templ->Set(
+      gin::StringToSymbol(isolate, "isDestroyed"),
+      gin::CreateFunctionTemplate(
+          isolate, base::BindRepeating(&gin_helper::Destroyable::IsDestroyed),
+          options));
+  // We use gin_helper::ObjectTemplateBuilder instead of
+  // gin::ObjectTemplateBuilder here to handle the fact that WebContents is
+  // destroyable.
+  return gin_helper::ObjectTemplateBuilder(isolate, templ)
+      .SetMethod("_loadURL", &WebContents::LoadURL)
+      .Build();
+}
 }  // namespace api
 
 }  // namespace electron
+
+namespace {
+// using electron::api::GetAllWebContents;
+using electron::api::WebContents;
+
+void Initialize(v8::Local<v8::Object> exports,
+                v8::Local<v8::Value> unused,
+                v8::Local<v8::Context> context,
+                void* priv) {
+                  printf("WebContents Initialize");
+  v8::Isolate* isolate = context->GetIsolate();
+  gin_helper::Dictionary dict(isolate, exports);
+  printf("WebContents\n");
+  dict.Set("WebContents", WebContents::GetConstructor(context));
+}
+}
+
+NODE_LINKED_MODULE_CONTEXT_AWARE(electron_browser_web_contents, Initialize)

@@ -28,9 +28,7 @@ InspectableWebContents::InspectableWebContents(
 
   if (is_guest_) {
     printf("is_guest true\n");
-  }  
-
-  printf("InspectableWebContents初始化\n");    
+  }    
 
   g_web_contents_instances_.push_back(this);
 }
@@ -44,11 +42,8 @@ content::WebContents* InspectableWebContents::GetWebContents() const {
 }
 
 InspectableWebContentsView* InspectableWebContents::GetView() const {
-  printf("InspectableWebContents GetView\n");
-
   InspectableWebContentsView* a = view_.get();
 
-  printf("InspectableWebContents GetView111\n");
   return a;
 }
 

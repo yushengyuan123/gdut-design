@@ -8,7 +8,6 @@ namespace electron {
 
 DelayedNativeViewHost::DelayedNativeViewHost(gfx::NativeView native_view)
     : native_view_(native_view) {
-      printf("DelayedNativeViewHost\n");
     }
 
 DelayedNativeViewHost::~DelayedNativeViewHost() = default;

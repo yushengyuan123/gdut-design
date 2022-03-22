@@ -1,26 +1,12 @@
-const { BrowserWindow, showSaveDialog } = process._linkedBinding('electron_browser_window')
-
-
-// BrowserWindow.prototype._init = function () {
-//   console.log("init函数");
-  
-
-// }
+// @ts-ignore
+const { WebContents } = process._linkedBinding('electron_browser_web_contents');
+const { BrowserWindow } = process._linkedBinding('electron_browser_window')
 
 // @ts-ignore
-BrowserWindow.prototype.loadURL = function (...args) {
-  console.log("loadURL ts", args);
-
-  // console.log(this);
-  console.log("haha");
-  
+BrowserWindow.prototype.loadURL = function (url) {
   console.log(this.webContents);
-  console.log("11111");
   
-  
-  
-  
-  return this.webContents.loadURL(...args);
+  return this.webContents._loadURL(url, {});
 }
 
 module.exports = BrowserWindow

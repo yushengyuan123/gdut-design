@@ -45,7 +45,7 @@ namespace electron {
 
     g_platform->CreatePlatformWindow(shell);
 
-    g_platform->SetContents(shell);
+    // g_platform->SetContents(shell);
 
     return shell;
   }

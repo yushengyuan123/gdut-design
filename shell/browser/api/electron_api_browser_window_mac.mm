@@ -26,6 +26,7 @@ void BrowserWindow::OverrideNSWindowContentView(
   // NativeWindowMac的GetNativeWindow()返回ElectronNSWindow* window_;
   NSView* contentView =
       [window()->GetNativeWindow().GetNativeNSWindow() contentView];
+
   [webView setFrame:[contentView bounds]];
 
   // ensure that buttons view is floated to top of view hierarchy
@@ -33,7 +34,10 @@ void BrowserWindow::OverrideNSWindowContentView(
   NSView* last = subviews.lastObject;
   [contentView addSubview:webView positioned:NSWindowBelow relativeTo:last];
 
-  [contentView viewDidMoveToWindow];
+  NSRect frame = [contentView bounds];
+
+  [webView setFrame:frame];
+  [webView setNeedsDisplay:YES];
 }
 }
 }

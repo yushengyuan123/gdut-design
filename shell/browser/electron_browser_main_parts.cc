@@ -110,6 +110,7 @@ namespace electron {
     // Notify observers that main thread message loop was initialized.
     // Browser::Get() = ElectronBrowserMainParts实例
     // Browser::Get()->PreMainMessageLoopRun();
+
     // Shell::Initialize(std::make_unique<ShellPlatformDelegate>());
 
     // set_browser_context(new ShellBrowserContext(false));

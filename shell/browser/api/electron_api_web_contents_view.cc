@@ -21,7 +21,6 @@ WebContentsView::WebContentsView(v8::Isolate* isolate,
           web_contents->inspectable_web_contents()->GetView()->GetNativeView())),
           web_contents_(isolate, web_contents.ToV8()),
       api_web_contents_(web_contents.get()) {
-        printf("WebContentsView构建\n");
   // Observe(web_contents->web_contents());
 }
 
@@ -37,12 +36,10 @@ gin::Handle<WebContentsView> WebContentsView::Create(
  
   // 这个NewInstance会调用到下面的New函数
   if (GetConstructor(isolate)->NewInstance(context, 1, &arg).ToLocal(&obj)) {
-    printf("1333335555\n"); 
     gin::Handle<WebContentsView> web_contents_view;
     if (gin::ConvertFromV8(isolate, obj, &web_contents_view))
       return web_contents_view;
   }
-  printf("133333\n"); 
   return gin::Handle<WebContentsView>();
 }
 
@@ -57,7 +54,6 @@ v8::Local<v8::Function> WebContentsView::GetConstructor(v8::Isolate* isolate) {
   constructor->Reset(
         isolate, gin_helper::CreateConstructor<WebContentsView>(
                      isolate, base::BindRepeating(&WebContentsView::New)));
-  printf("133333\n"); 
   return v8::Local<v8::Function>::New(isolate, *constructor.get());
 }
 
@@ -65,14 +61,11 @@ v8::Local<v8::Function> WebContentsView::GetConstructor(v8::Isolate* isolate) {
 gin_helper::WrappableBase* WebContentsView::New(
     gin_helper::Arguments* args,
     const gin_helper::Dictionary& web_preferences) {
-      printf("WebContentsView::New\n"); 
   // 这里创建出来一个web_contents
   auto web_contents =
       WebContents::CreateFromWebPreferences(args->isolate(), web_preferences);
-  printf("WebContentsView::web_contents\n"); 
   // Constructor call.
   auto* view = new WebContentsView(args->isolate(), web_contents);
-  printf("WebContentsView::views\n");
   view->InitWithArgs(args);
   return view;
 }
@@ -87,8 +80,6 @@ void WebContentsView::BuildPrototype(
 }
 
 gin::Handle<WebContents> WebContentsView::GetWebContents(v8::Isolate* isolate) {
-  printf("GetWebContentsView\n");
-
   if (!api_web_contents_) {
     printf("sssss\n");
   }

@@ -26,6 +26,7 @@
 #include "gin/wrappable.h"
 
 #include "shell/browser/ui/inspectable_web_contents.h"
+#include "shell/common/gin_helper/constructible.h"
 
 namespace gin_helper {
 class Dictionary;
@@ -42,6 +43,7 @@ class NativeWindow;
 
 namespace api {
 class WebContents : public gin::Wrappable<WebContents>,
+                    public gin_helper::Constructible<WebContents>,
                     public content::WebContentsObserver {
  public:
   enum class Type {
@@ -63,7 +65,7 @@ class WebContents : public gin::Wrappable<WebContents>,
       v8::Isolate* isolate,
       const gin_helper::Dictionary& web_preferences);
 
-  ~WebContents() override;    
+  ~WebContents() override;
 
   bool IsGuest() const;
 
@@ -74,7 +76,7 @@ class WebContents : public gin::Wrappable<WebContents>,
   void SetOwnerWindow(content::WebContents* web_contents,
                       NativeWindow* owner_window);
 
-  void LoadURL(const GURL& url, const gin_helper::Dictionary& options);                    
+  void LoadURL(const GURL& url, const gin_helper::Dictionary& options);
 
   void InitWithSessionAndOptions(
       v8::Isolate* isolate,
@@ -86,14 +88,18 @@ class WebContents : public gin::Wrappable<WebContents>,
   // |web_contents|.
   void InitWithWebContents(std::unique_ptr<content::WebContents> web_contents,
                            ElectronBrowserContext* browser_context,
-                           bool is_guest);      
-              
+                           bool is_guest);
+
   // Returns the WebContents managed by this delegate.
   content::WebContents* GetWebContents() const;
 
   InspectableWebContents* inspectable_web_contents() const {
     return inspectable_web_contents_.get();
-  }                           
+  }
+
+  static v8::Local<v8::ObjectTemplate> FillObjectTemplate(
+      v8::Isolate*,
+      v8::Local<v8::ObjectTemplate>);
 
  private:
   base::WeakPtr<NativeWindow> owner_window_;

@@ -30,6 +30,10 @@ NativeWindow::~NativeWindow() {
   // NotifyWindowClosed();
 }
 
+void NativeWindow::InitFromOptions(const gin_helper::Dictionary& options) {
+  Show();
+}
+
 void NativeWindow::NotifyWindowShow() {
   for (NativeWindowObserver& observer : observers_)
     observer.OnWindowShow();
