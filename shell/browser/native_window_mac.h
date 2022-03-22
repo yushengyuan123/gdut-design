@@ -44,10 +44,14 @@ namespace electron {
 
 
     protected:
+      base::scoped_nsobject<NSView> container_view_;
+
       // ui::NativeThemeObserver:
       void OnNativeThemeUpdated(ui::NativeTheme* observed_theme) override;  
       
     private:
+      void AddContentViewLayers();
+      
       base::scoped_nsobject<ElectronNSWindowDelegate> window_delegate_;
 
       base::scoped_nsobject<ElectronPreviewItem> preview_item_;

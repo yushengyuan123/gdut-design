@@ -5,9 +5,11 @@
 #include <string>
 #include <vector>
 
+#include "base/values.h"
 #include "base/observer_list.h"
 #include "shell/browser/browser_observer.h"
 #include "shell/browser/window_list_observer.h"
+#include "shell/common/gin_helper/promise.h"
 
 // 既然这个browser类实现了这个WindowListObserver类，那么当WindowList中有window发生了变化自然执行的就是这里的
 // 实现方法
@@ -32,7 +34,11 @@ namespace electron {
 
       // disable copy
       Browser(const Browser&) = delete;
-      Browser& operator=(const Browser&) = delete;  
+      Browser& operator=(const Browser&) = delete;
+
+      bool is_ready() const { return is_ready_; }
+
+      void DidFinishLaunching(base::DictionaryValue launch_info);  
 
       // 这个东西是获得ElectronBrowserMainParts
       static Browser* Get();
@@ -54,6 +60,8 @@ namespace electron {
 
       void PreMainMessageLoopRun();
 
+      v8::Local<v8::Value> WhenReady(v8::Isolate* isolate);
+
     protected:
       // Send the will-quit message and then shutdown the application.
       void NotifyAndShutdown();
@@ -65,11 +73,16 @@ namespace electron {
 
 
     private:
+      // Whether "ready" event has been emitted.
+      bool is_ready_ = false;
+
       // Observers of the browser.
       base::ObserverList<BrowserObserver> observers_;
 
       // The browser is being shutdown.
-      bool is_shutdown_ = false;        
+      bool is_shutdown_ = false;
+
+      std::unique_ptr<gin_helper::Promise<void>> ready_promise_;        
   };
 }
 

@@ -17,7 +17,6 @@ namespace electron {
                                            backing:NSBackingStoreBuffered
                                              defer:NO];
     [window makeKeyAndOrderFront:nil];
-    
-    [NSApp run]; 
+  
   }
 }

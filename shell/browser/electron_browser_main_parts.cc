@@ -23,8 +23,10 @@
 #include "content/public/common/content_switches.h"
 #include "content/public/common/result_codes.h"
 
+#include "shell/browser/browser.h"
 #include "shell/browser/feature_list.h"
 #include "shell/browser/javascript_environment.h"
+#include "shell/browser/ui/cocoa/views_delegate_mac.h"
 #include "shell/common/node_bindings.h"
 #include "shell/common/node_includes.h"
 #include "shell/views/shell.h"
@@ -35,9 +37,9 @@
 
 namespace electron {
   namespace {
-    GURL GetStartupURL() {
-      return GURL("https://www.baidu.com");
-    }
+    // GURL GetStartupURL() {
+    //   return GURL("https://www.baidu.com");
+    // }
   }
 
   // static
@@ -46,8 +48,8 @@ namespace electron {
   ElectronBrowserMainParts::ElectronBrowserMainParts(
       const content::MainFunctionParams& params):
       node_bindings_(
-          NodeBindings::Create(NodeBindings::BrowserEnvironment::kBrowser)) {
-      // : browser_(std::make_unique<Browser>()) {
+          NodeBindings::Create(NodeBindings::BrowserEnvironment::kBrowser)), 
+          browser_(std::make_unique<Browser>()) {
     // DCHECK(!self_) << "Cannot have two ElectronBrowserMainParts";
     self_ = this;
   }
@@ -86,6 +88,10 @@ namespace electron {
     InitializeFieldTrials();
   }
 
+  void ElectronBrowserMainParts::ToolkitInitialized() {
+    views_delegate_ = std::make_unique<ViewsDelegateMac>();
+  }
+
   int ElectronBrowserMainParts::GetExitCode() const {
     return exit_code_.value_or(content::RESULT_CODE_NORMAL_EXIT);
   }
@@ -104,11 +110,11 @@ namespace electron {
     // Notify observers that main thread message loop was initialized.
     // Browser::Get() = ElectronBrowserMainParts实例
     // Browser::Get()->PreMainMessageLoopRun();
-    Shell::Initialize(std::make_unique<ShellPlatformDelegate>());
+    // Shell::Initialize(std::make_unique<ShellPlatformDelegate>());
 
-    set_browser_context(new ShellBrowserContext(false));
+    // set_browser_context(new ShellBrowserContext(false));
 
-    Shell::CreateNewWindow(browser_context_.get(), GetStartupURL(), nullptr);
+    // Shell::CreateNewWindow(browser_context_.get(), GetStartupURL(), nullptr);
 
     return 0;
   }

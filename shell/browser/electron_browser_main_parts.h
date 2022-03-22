@@ -27,6 +27,7 @@ namespace electron {
   class NodeBindings;
   class JavascriptEnvironment;
   class NodeEnvironment;
+  class ViewsDelegateMac;
 
   // class Browser;
 
@@ -41,17 +42,17 @@ namespace electron {
 
     static ElectronBrowserMainParts* Get();
 
+    Browser* browser() { return browser_.get(); }
+
     // Gets the exit code
     int GetExitCode() const;
-
-    // Browser* browser() { return browser_.get(); }
 
   protected:
     // content::BrowserMainParts:
     int PreEarlyInitialization() override;
     void PostEarlyInitialization() override;
     // int PreCreateThreads() override;
-    // void ToolkitInitialized() override;
+    void ToolkitInitialized() override;
     int PreMainMessageLoopRun() override;
     // void WillRunMainMessageLoop(
     //     std::unique_ptr<base::RunLoop>& run_loop) override;
@@ -76,13 +77,15 @@ namespace electron {
 
     std::unique_ptr<ShellBrowserContext> browser_context_;
 
+    std::unique_ptr<ViewsDelegateMac> views_delegate_;
+
   #if defined(OS_MAC)
     void FreeAppDelegate();
     void RegisterURLHandler();
     void InitializeMainNib();
   #endif
 
-    // std::unique_ptr<Browser> browser_;
+    std::unique_ptr<Browser> browser_;
 
     // A place to remember the exit code once the message loop is ready.
     // Before then, we just exit() without any intermediate steps.

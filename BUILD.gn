@@ -487,6 +487,15 @@ source_set("electron_lib") {
     frameworks = [
         "Foundation.framework",
         "AppKit.framework",
+        "AVFoundation.framework",
+        "Carbon.framework",
+        "LocalAuthentication.framework",
+        "QuartzCore.framework",
+        "Quartz.framework",
+        "Security.framework",
+        "SecurityInterface.framework",
+        "ServiceManagement.framework",
+        "StoreKit.framework",
     ]
 }
 

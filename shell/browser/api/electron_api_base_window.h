@@ -15,8 +15,11 @@
 #include "content/public/browser/browser_thread.h"
 #include "gin/handle.h"
 
+#include "shell/browser/native_window.h"
+#include "shell/browser/native_window_observer.h"
 #include "shell/common/gin_helper/arguments.h"
 #include "shell/common/gin_helper/dictionary.h"
+#include "shell/common/gin_helper/trackable_object.h"
 
 namespace electron {
 
@@ -24,9 +27,10 @@ namespace api {
 
 class View;
 
-class BaseWindow {
+class BaseWindow : public gin_helper::TrackableObject<BaseWindow>,
+                   public NativeWindowObserver {
  public:
-
+  NativeWindow* window() const { return window_.get(); }
 
  protected:
   // Common constructor.
@@ -36,7 +40,9 @@ class BaseWindow {
   BaseWindow(gin_helper::Arguments* args,
              const gin_helper::Dictionary& options);
 
-  ~BaseWindow();
+  ~BaseWindow() override;
+
+  std::unique_ptr<NativeWindow> window_;
 };  // namespace electron
 }  // namespace api
 }  // namespace electron

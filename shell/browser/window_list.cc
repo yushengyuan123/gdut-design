@@ -25,6 +25,16 @@ namespace electron {
       observer.OnWindowAdded(window);
   }
 
+    // static
+  void WindowList::AddObserver(WindowListObserver* observer) {
+    observers_.Get().AddObserver(observer);
+  }
+
+  // static
+  void WindowList::RemoveObserver(WindowListObserver* observer) {
+    observers_.Get().RemoveObserver(observer);
+  }
+
   // static
   void WindowList::RemoveWindow(NativeWindow* window) {
     WindowVector& windows = GetInstance()->windows_;

@@ -17,18 +17,6 @@ namespace electron {
     [NSApp setDelegate:delegate];
 
     PreCreateMainMessageLoopCommon();
-
-    // NSRect initial_window_bounds = NSMakeRect(0, 0, 100, 200);
-    // NSRect content_rect = initial_window_bounds;
-    // NSUInteger style_mask = NSTitledWindowMask | NSClosableWindowMask |
-    //                         NSMiniaturizableWindowMask | NSResizableWindowMask;
-                            
-    // CrShellWindow* window =
-    //     [[CrShellWindow alloc] initWithContentRect:content_rect
-    //                                      styleMask:style_mask
-    //                                        backing:NSBackingStoreBuffered
-    //                                          defer:NO];
-    // [window makeKeyAndOrderFront:nil];
   }
 
   void ElectronBrowserMainParts::RegisterURLHandler() {

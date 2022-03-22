@@ -34,7 +34,10 @@
 
 #define ELECTRON_BUILTIN_MODULES(V)      \
   V(electron_browser_app)                \
+  V(electron_browser_view)               \
   V(electron_browser_window)             \
+  V(electron_browser_event_emitter)      \
+  V(electron_browser_web_contents_view)  \
   V(electron_common_asar)                \
   V(electron_common_v8_util)             \
 

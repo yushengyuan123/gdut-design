@@ -33,6 +33,8 @@ namespace electron {
 
       node::MultiIsolatePlatform* platform() const { return platform_; }
 
+      static v8::Isolate* GetIsolate();
+
 
     private:
       v8::Isolate* Initialize(uv_loop_t* event_loop);

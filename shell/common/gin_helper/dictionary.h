@@ -31,7 +31,25 @@ class Dictionary : public gin::Dictionary {
         .ToChecked();
   }
 
-    // Differences from the Set method in gin::Dictionary:
+  // Differences from the Get method in gin::Dictionary:
+  // 1. This is a const method;
+  // 2. It checks whether the key exists before reading;
+  // 3. It accepts arbitrary type of key.
+  template <typename K, typename V>
+  bool Get(const K& key, V* out) const {
+    // Check for existence before getting, otherwise this method will always
+    // returns true when T == v8::Local<v8::Value>.
+    v8::Local<v8::Context> context = isolate()->GetCurrentContext();
+    v8::Local<v8::Value> v8_key = gin::ConvertToV8(isolate(), key);
+    v8::Local<v8::Value> value;
+    v8::Maybe<bool> result = GetHandle()->Has(context, v8_key);
+    if (result.IsJust() && result.FromJust() &&
+        GetHandle()->Get(context, v8_key).ToLocal(&value))
+      return gin::ConvertFromV8(isolate(), value, out);
+    return false;
+  }
+
+  // Differences from the Set method in gin::Dictionary:
   // 1. It accepts arbitrary type of key.
   template <typename K, typename V>
   bool Set(const K& key, const V& val) {
@@ -41,6 +59,44 @@ class Dictionary : public gin::Dictionary {
     v8::Maybe<bool> result =
         GetHandle()->Set(isolate()->GetCurrentContext(),
                          gin::ConvertToV8(isolate(), key), v8_value);
+    return !result.IsNothing() && result.FromJust();
+  }
+
+  // Like normal Get but put result in an absl::optional.
+  template <typename T>
+  bool GetOptional(base::StringPiece key, absl::optional<T>* out) const {
+    T ret;
+    if (Get(key, &ret)) {
+      out->emplace(std::move(ret));
+      return true;
+    } else {
+      return false;
+    }
+  }
+
+  template <typename T>
+  bool GetHidden(base::StringPiece key, T* out) const {
+    v8::Local<v8::Context> context = isolate()->GetCurrentContext();
+    v8::Local<v8::Private> privateKey =
+        v8::Private::ForApi(isolate(), gin::StringToV8(isolate(), key));
+    v8::Local<v8::Value> value;
+    v8::Maybe<bool> result = GetHandle()->HasPrivate(context, privateKey);
+    if (result.IsJust() && result.FromJust() &&
+        GetHandle()->GetPrivate(context, privateKey).ToLocal(&value))
+      return gin::ConvertFromV8(isolate(), value, out);
+    return false;
+  }
+
+  template <typename T>
+  bool SetHidden(base::StringPiece key, T val) {
+    v8::Local<v8::Value> v8_value;
+    if (!gin::TryConvertToV8(isolate(), val, &v8_value))
+      return false;
+    v8::Local<v8::Context> context = isolate()->GetCurrentContext();
+    v8::Local<v8::Private> privateKey =
+        v8::Private::ForApi(isolate(), gin::StringToV8(isolate(), key));
+    v8::Maybe<bool> result =
+        GetHandle()->SetPrivate(context, privateKey, v8_value);
     return !result.IsNothing() && result.FromJust();
   }
 

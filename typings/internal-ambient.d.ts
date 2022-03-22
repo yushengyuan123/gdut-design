@@ -45,6 +45,8 @@ declare namespace NodeJS {
 
     _linkedBinding(name: string): any;
 
+    _linkedBinding(name: 'electron_browser_view'): { View: Electron.View };
+
     _firstFileName?: string;
   }
 }

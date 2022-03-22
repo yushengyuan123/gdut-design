@@ -20,8 +20,6 @@ class View;
 // 这个类看着像是一个开发者工具
 namespace electron {
 
-class InspectableWebContentsViewDelegate;
-
 class InspectableWebContentsView {
  public:
   InspectableWebContentsView() {}
@@ -29,6 +27,8 @@ class InspectableWebContentsView {
 
   virtual gfx::NativeView GetNativeView() const = 0;
 
+ private:
+  
 };
 
 }  // namespace electron

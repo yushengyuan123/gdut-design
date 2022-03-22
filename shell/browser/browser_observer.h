@@ -24,6 +24,8 @@ namespace electron {
       // The app message loop is ready
       virtual void OnPreMainMessageLoopRun() {}
 
+      virtual void OnFinishLaunching(const base::DictionaryValue& launch_info) {}
+
     protected:
       ~BrowserObserver() override {}
   };

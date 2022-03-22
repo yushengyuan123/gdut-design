@@ -23,71 +23,103 @@ class Dictionary;
 }  // namespace gin_helper
 
 namespace electron {
-  class NativeWindow : public base::SupportsUserData, public views::WidgetDelegate {
-    private:
-      // Observers of this window.
-      base::ObserverList<NativeWindowObserver> observers_;
+class NativeWindow : public base::SupportsUserData,
+                     public views::WidgetDelegate {
+ public:
+  ~NativeWindow() override;
 
-      views::View* content_view_ = nullptr;
+  // disable copy
+  NativeWindow(const NativeWindow&) = delete;
+  NativeWindow& operator=(const NativeWindow&) = delete;
 
-      // Minimum and maximum size, stored as content size.
-      extensions::SizeConstraints size_constraints_;
+  static NativeWindow* Create(const gin_helper::Dictionary& options,
+                              NativeWindow* parent = nullptr);
 
-      // Whether window has standard frame.
-      bool has_frame_ = true;
+  // virtual void Show() = 0;
 
-    public:
-      ~NativeWindow() override;
+  virtual extensions::SizeConstraints GetSizeConstraints() const;
 
-      // disable copy
-      NativeWindow(const NativeWindow&) = delete;
-      NativeWindow& operator=(const NativeWindow&) = delete;
+  virtual extensions::SizeConstraints GetContentSizeConstraints() const;
 
-      static NativeWindow* Create(const gin_helper::Dictionary& options,
-                                NativeWindow* parent = nullptr);
+  virtual gfx::Size GetMaximumSize() const;
 
-      // virtual void Show() = 0;
+  // Converts between content bounds and window bounds.
+  virtual gfx::Rect ContentBoundsToWindowBounds(
+      const gfx::Rect& bounds) const = 0;
 
-      virtual extensions::SizeConstraints GetSizeConstraints() const;
+  virtual gfx::Size GetMinimumSize() const;
 
-      virtual extensions::SizeConstraints GetContentSizeConstraints() const;
+  base::WeakPtr<NativeWindow> GetWeakPtr() {
+    return weak_factory_.GetWeakPtr();
+  }
 
-      virtual gfx::Size GetMaximumSize() const;
+  void NotifyWindowShow();
 
-      // Converts between content bounds and window bounds.
-      virtual gfx::Rect ContentBoundsToWindowBounds(
-            const gfx::Rect& bounds) const = 0;
+  bool has_frame() const { return has_frame_; }
 
-      virtual gfx::Size GetMinimumSize() const;
+  virtual void SetContentView(views::View* view) = 0;
 
-      void NotifyWindowShow();
+  virtual gfx::NativeWindow GetNativeWindow() const = 0;
 
-      bool has_frame() const { return has_frame_; }
+  bool is_modal() const { return is_modal_; }
 
-      virtual void SetContentView(views::View* view) = 0;
+  views::Widget* widget() const { return widget_.get(); }
 
-      virtual gfx::NativeWindow GetNativeWindow() const = 0;
+  NativeWindow* parent() const { return parent_; }
 
-      views::Widget* widget() const { return widget_.get(); }
-      views::View* content_view() const { return content_view_; }
+  views::View* content_view() const { return content_view_; }
 
-      void AddObserver(NativeWindowObserver* obs) { observers_.AddObserver(obs); }
+  void AddObserver(NativeWindowObserver* obs) { observers_.AddObserver(obs); }
 
-      void RemoveObserver(NativeWindowObserver* obs) {
-        observers_.RemoveObserver(obs);
-      }
+  void RemoveObserver(NativeWindowObserver* obs) {
+    observers_.RemoveObserver(obs);
+  }
 
-    protected:
-      std::unique_ptr<views::Widget> widget_;
+ protected:
+  std::unique_ptr<views::Widget> widget_;
 
-      NativeWindow(const gin_helper::Dictionary& options, NativeWindow* parent);
+  NativeWindow(const gin_helper::Dictionary& options, NativeWindow* parent);
 
-      void set_content_view(views::View* view) { content_view_ = view; }
+  void set_content_view(views::View* view) { content_view_ = view; }
 
-  };
-}
+ private:
+  // Observers of this window.
+  base::ObserverList<NativeWindowObserver> observers_;
 
+  views::View* content_view_ = nullptr;
 
+  bool is_modal_ = false;
 
+  // Minimum and maximum size, stored as content size.
+  extensions::SizeConstraints size_constraints_;
+
+  // Whether window has standard frame.
+  bool has_frame_ = true;
+
+  NativeWindow* parent_ = nullptr;
+
+  base::WeakPtrFactory<NativeWindow> weak_factory_{this};
+};
+
+// class NativeWindowRelay
+//     : public content::WebContentsUserData<NativeWindowRelay> {
+//  public:
+//   static void CreateForWebContents(content::WebContents*,
+//                                    base::WeakPtr<NativeWindow>);
+
+//   ~NativeWindowRelay() override;
+
+//   NativeWindow* GetNativeWindow() const { return native_window_.get(); }
+
+//   WEB_CONTENTS_USER_DATA_KEY_DECL();
+
+//  private:
+//   friend class content::WebContentsUserData<NativeWindow>;
+//   explicit NativeWindowRelay(content::WebContents* web_contents,
+//                              base::WeakPtr<NativeWindow> window);
+
+//   base::WeakPtr<NativeWindow> native_window_;
+// };
+}  // namespace electron
 
 #endif

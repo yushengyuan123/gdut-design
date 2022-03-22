@@ -8,6 +8,14 @@
 #include <string>
 #include <utility>
 
+#include "base/files/file_util.h"
+#include "base/no_destructor.h"
+#include "base/path_service.h"
+#include "base/run_loop.h"
+#include "base/threading/thread_restrictions.h"
+#include "base/threading/thread_task_runner_handle.h"
+#include "chrome/common/chrome_paths.h"
+
 #include "shell/browser/electron_browser_main_parts.h"
 #include "shell/browser/window_list.h"
 
@@ -47,14 +55,14 @@ namespace electron {
     if (is_quitting_)
       return;
 
-    is_quitting_ = HandleBeforeQuit();
-    if (!is_quitting_)
-      return;
+    // is_quitting_ = HandleBeforeQuit();
+    // if (!is_quitting_)
+    //   return;
 
-    if (electron::WindowList::IsEmpty())
-      NotifyAndShutdown();
-    else
-      electron::WindowList::CloseAllWindows();
+    // if (electron::WindowList::IsEmpty())
+    //   NotifyAndShutdown();
+    // else
+    //   electron::WindowList::CloseAllWindows();
   }
 
   void Browser::NotifyAndShutdown() {
@@ -85,6 +93,33 @@ namespace electron {
     for (BrowserObserver& observer : observers_) {
       observer.OnPreMainMessageLoopRun();
     }
+  }
+
+  void Browser::DidFinishLaunching(base::DictionaryValue launch_info) {
+    // Make sure the userData directory is created.
+    base::ThreadRestrictions::ScopedAllowIO allow_io;
+    base::FilePath user_data;
+    if (base::PathService::Get(chrome::DIR_USER_DATA, &user_data))
+      base::CreateDirectoryAndGetError(user_data, nullptr);
+
+    is_ready_ = true;
+
+    if (ready_promise_) {
+      ready_promise_->Resolve();
+    }
+
+    for (BrowserObserver& observer : observers_)
+      observer.OnFinishLaunching(launch_info);
+  }
+
+  v8::Local<v8::Value> Browser::WhenReady(v8::Isolate* isolate) {
+    if (!ready_promise_) {
+      ready_promise_ = std::make_unique<gin_helper::Promise<void>>(isolate);
+      if (is_ready()) {
+        ready_promise_->Resolve();
+      }
+    }
+    return ready_promise_->GetHandle();
   }
 
   // static

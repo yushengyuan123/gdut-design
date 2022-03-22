@@ -1,4 +1,5 @@
 import * as path from 'path';
+import { EventEmitter } from 'events';
 
 const Module = require('module');
 
@@ -6,10 +7,7 @@ process.argv.splice(1, 1);
 
 require('../common/reset-search-paths');
 
-const app = require('electron');
-
-console.log(app.app);
-
+process._linkedBinding('electron_browser_event_emitter').setEventEmitterPrototype(EventEmitter.prototype);
 
 const v8Util = process._linkedBinding('electron_common_v8_util');
 let packagePath = null;

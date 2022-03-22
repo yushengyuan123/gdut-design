@@ -162,6 +162,12 @@ int RunNodeInstance(node::MultiIsolatePlatform* platform,
 
 base::NoDestructor<base::PartitionAllocator> ArrayBufferAllocator::allocator_{};
 
+// static
+v8::Isolate* JavascriptEnvironment::GetIsolate() {
+  CHECK(g_isolate);
+  return g_isolate;
+}
+
 JavascriptEnvironment::JavascriptEnvironment(uv_loop_t* event_loop)
     : isolate_(Initialize(event_loop)),
       isolate_holder_(base::ThreadTaskRunnerHandle::Get(),
@@ -190,8 +196,10 @@ int JavascriptEnvironment::NodeStartup() {
   // argv[1] = "-e";
   // argv[2] = "console.log(1)";
 
-    // 为什么我需要手动些这句话呢？？？？
-  v8::V8::InitializeExternalStartupData("/Users/yushengyuan/yushengyuan/study/chromium1/src/out/testing/snapshot_blob.bin");
+  // 为什么我需要手动些这句话呢？？？？
+  v8::V8::InitializeExternalStartupData(
+      "/Users/yushengyuan/yushengyuan/study/chromium1/src/out/testing/"
+      "snapshot_blob.bin");
 
   // argv = uv_setup_args(argc, argv);
   std::vector<std::string> argv = {"electron"};
@@ -230,7 +238,9 @@ class TracingControllerImpl : public node::tracing::TracingController {
 v8::Isolate* JavascriptEnvironment::Initialize(uv_loop_t* event_loop) {
   auto* cmd = base::CommandLine::ForCurrentProcess();
   // 为什么我需要手动些这句话呢？？？？
-  v8::V8::InitializeExternalStartupData("/Users/yushengyuan/yushengyuan/study/chromium1/src/out/testing/snapshot_blob.bin");
+  v8::V8::InitializeExternalStartupData(
+      "/Users/yushengyuan/yushengyuan/study/chromium1/src/out/testing/"
+      "snapshot_blob.bin");
 
   // --js-flags.
   std::string js_flags =

@@ -1,3 +1,4 @@
+
 #ifndef ELECTRON_SHELL_BROWSER_UI_INSPECTABLE_WEB_CONTENTS_H_
 #define ELECTRON_SHELL_BROWSER_UI_INSPECTABLE_WEB_CONTENTS_H_
 
@@ -22,37 +23,32 @@
 #include "ui/gfx/geometry/rect.h"
 
 namespace electron {
-    class InspectableWebContents
-        : public content::DevToolsAgentHostClient,
-        public content::WebContentsObserver,
-        public content::WebContentsDelegate,
-        public DevToolsEmbedderMessageDispatcher::Delegate {
-        
-        public:
-            using List = std::list<InspectableWebContents*>;
+  class InspectableWebContentsView;
 
-            InspectableWebContents(std::unique_ptr<content::WebContents> web_contents,
-                                    PrefService* pref_service,
-                                    bool is_guest);
-            ~InspectableWebContents() override;
+class InspectableWebContents {
+ public:
+  using List = std::list<InspectableWebContents*>;
 
-            // disable copy
-            InspectableWebContents(const InspectableWebContents&) = delete;
-            InspectableWebContents& operator=(const InspectableWebContents&) = delete;
+  InspectableWebContents(std::unique_ptr<content::WebContents> web_contents,
+                         bool is_guest);
 
-            bool IsGuest() const;
+  ~InspectableWebContents();
 
-        private:
-            PrefService* pref_service_;  // weak reference.
+  // disable copy
+  InspectableWebContents(const InspectableWebContents&) = delete;
+  InspectableWebContents& operator=(const InspectableWebContents&) = delete;
 
-            std::unique_ptr<content::WebContents> web_contents_;
+  content::WebContents* GetWebContents() const;
 
-            bool is_guest_;
+  InspectableWebContentsView* GetView() const;
 
-            std::unique_ptr<InspectableWebContentsView> view_;    
-    
-    };
-}
+ private:
+  std::unique_ptr<content::WebContents> web_contents_;
+  bool is_guest_;
 
+  std::unique_ptr<InspectableWebContentsView> view_;
+};
 
-#endif
+}  // namespace electron
+
+#endif  // ELECTRON_SHELL_BROWSER_UI_INSPECTABLE_WEB_CONTENTS_H_

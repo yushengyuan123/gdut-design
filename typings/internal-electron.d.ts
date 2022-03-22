@@ -2,6 +2,8 @@
 
 declare namespace Electron {
 
+  class View {}
+
 }
 
 declare namespace ElectronInternal {
