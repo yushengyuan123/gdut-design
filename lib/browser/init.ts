@@ -17,6 +17,8 @@ const searchPaths: string[] = v8Util.getHiddenValue(global, 'appSearchPaths');
 
 if (process.resourcesPath) {
   for (packagePath of searchPaths) {
+    console.log(packagePath);
+    
     try {
       packagePath = path.join(process.resourcesPath, packagePath);
       packageJson = Module._load(path.join(packagePath, 'package.json'));

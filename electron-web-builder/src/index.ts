@@ -1,5 +1,5 @@
 const { BrowserWindow, app } = require("electron")
-const path = require("path");
+const path = require("path")
 
 console.log('用户js入口caonima')
 
