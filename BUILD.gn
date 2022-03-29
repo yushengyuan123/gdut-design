@@ -1,6 +1,8 @@
 import("filenames.gni")
 import("buildflags/buildflags.gni")
 import("//content/public/app/mac_helpers.gni")
+import("//components/spellcheck/spellcheck_build_features.gni")
+import("//pdf/features.gni")
 import("build/asar.gni")
 import("build/npm.gni")
 import("build/templated_file.gni")
@@ -11,6 +13,7 @@ import("filenames.libcxx.gni")
 import("filenames.libcxxabi.gni")
 import("electron_paks.gni")
 import("build/tsc.gni")
+import("build/extract_symbols.gni")
 import("//tools/v8_context_snapshot/v8_context_snapshot.gni")
 import("//v8/gni/snapshot_toolchain.gni")
 import("//tools/grit/grit_rule.gni")
@@ -21,6 +24,7 @@ branding = read_file("shell/app/BRANDING.json", "json")
 electron_version = read_file("ELECTRON_VERSION", "trim string")
 electron_product_name = branding.product_name
 electron_project_name = branding.project_name
+
 
 
 declare_args() {
@@ -46,15 +50,17 @@ npm_action("electron_version_args") {
 # }
 
 v8_use_external_startup_data = true
-use_v8_context_snapshot = false
+# use_v8_context_snapshot = false
 
 target_gen_default_app_js = "$target_gen_dir/js/default_app"
+
 
 if (is_mac) {
     import("//build/config/mac/rules.gni")
     import("build/rules.gni")
     import("//third_party/icu/config.gni")
     import("//v8/gni/v8.gni")
+    import("//ui/gl/features.gni")
 
     electron_framework_name = "$electron_product_name Framework"
     electron_helper_name = "$electron_product_name Helper"
@@ -99,17 +105,107 @@ if (is_mac) {
         outputs = [ "{{bundle_resources_dir}}/{{source_file_part}}" ]
     }
 
-      bundle_data("electron_framework_libraries") {
-        sources = []
-        public_deps = []
-        sources += [ "$root_out_dir/libffmpeg.dylib" ]
-        public_deps += [ "//third_party/ffmpeg:ffmpeg" ]
-        outputs = [ "{{bundle_contents_dir}}/Libraries/{{source_file_part}}" ]
-      }
-}
+      # bundle_data("electron_framework_libraries") {
+      #   sources = []
+      #   public_deps = []
+      #   sources += [ "$root_out_dir/libffmpeg.dylib" ]
+      #   public_deps += [ "//third_party/ffmpeg:ffmpeg" ]
+      #   outputs = [ "{{bundle_contents_dir}}/Libraries/{{source_file_part}}" ]
+      # }
 
-if (is_component_build) {
-  print("canonima")
+  if (use_egl) {
+    # Add the ANGLE .dylibs in the Libraries directory of the Framework.
+    bundle_data("electron_angle_binaries") {
+      sources = [
+        "$root_out_dir/egl_intermediates/libEGL.dylib",
+        "$root_out_dir/egl_intermediates/libGLESv2.dylib",
+      ]
+      outputs = [ "{{bundle_contents_dir}}/Libraries/{{source_file_part}}" ]
+      public_deps = [ "//ui/gl:angle_library_copy" ]
+    }
+
+    # Add the SwiftShader .dylibs in the Libraries directory of the Framework.
+    bundle_data("electron_swiftshader_binaries") {
+      sources = [
+        "$root_out_dir/egl_intermediates/libswiftshader_libEGL.dylib",
+        "$root_out_dir/egl_intermediates/libswiftshader_libGLESv2.dylib",
+        "$root_out_dir/vk_intermediates/libvk_swiftshader.dylib",
+        "$root_out_dir/vk_intermediates/vk_swiftshader_icd.json",
+      ]
+      outputs = [ "{{bundle_contents_dir}}/Libraries/{{source_file_part}}" ]
+      public_deps = [
+        "//ui/gl:swiftshader_egl_library_copy",
+        "//ui/gl:swiftshader_vk_library_copy",
+      ]
+    }
+  }
+  
+  group("electron_angle_library") {
+    if (use_egl) {
+      deps = [ ":electron_angle_binaries" ]
+    }
+  }
+
+  group("electron_swiftshader_library") {
+    if (use_egl) {
+      deps = [ ":electron_swiftshader_binaries" ]
+    }
+  }   
+
+  template("stripped_framework") {
+    action(target_name) {
+      assert(defined(invoker.framework))
+
+      script = "//electron/build/strip_framework.py"
+
+      forward_variables_from(invoker, [ "deps" ])
+      inputs = [ "$root_out_dir/" + invoker.framework ]
+      outputs = [ "$target_out_dir/stripped_frameworks/" + invoker.framework ]
+
+      args = rebase_path(inputs) + rebase_path(outputs)
+    }
+  }
+
+  stripped_framework("stripped_mantle_framework") {
+    framework = "Mantle.framework"
+    deps = [ "//third_party/squirrel.mac:mantle_framework" ]
+  }
+
+  stripped_framework("stripped_reactiveobjc_framework") {
+    framework = "ReactiveObjC.framework"
+    deps = [ "//third_party/squirrel.mac:reactiveobjc_framework" ]
+  }
+
+  stripped_framework("stripped_squirrel_framework") {
+    framework = "Squirrel.framework"
+    deps = [ "//third_party/squirrel.mac:squirrel_framework" ]
+  }  
+
+  action("electron_app_lproj_dirs") {
+    outputs = []
+
+    foreach(locale, locales_as_mac_outputs) {
+      outputs += [ "$target_gen_dir/app_infoplist_strings/$locale.lproj" ]
+    }
+    script = "build/mac/make_locale_dirs.py"
+    args = rebase_path(outputs)
+  } 
+
+  foreach(locale, locales_as_mac_outputs) {
+    bundle_data("electron_app_strings_${locale}_bundle_data") {
+      sources = [ "$target_gen_dir/app_infoplist_strings/$locale.lproj" ]
+      outputs = [ "{{bundle_resources_dir}}/$locale.lproj" ]
+      public_deps = [ ":electron_app_lproj_dirs" ]
+    }
+  }  
+
+  group("electron_app_strings_bundle_data") {
+    public_deps = []
+    foreach(locale, locales_as_mac_outputs) {
+      public_deps += [ ":electron_app_strings_${locale}_bundle_data" ]
+    }
+  }  
+     
 }
 
 config("branding") {
@@ -122,6 +218,8 @@ config("branding") {
 config("electron_lib_config") {
     include_dirs = [ "." ]
 }
+
+
 
 
 templated_file("electron_version_header") {
@@ -146,6 +244,11 @@ action("electron_fuses") {
   args = rebase_path(outputs)
 }
 
+copy("electron_version") {
+  sources = [ "ELECTRON_VERSION" ]
+  outputs = [ "$root_build_dir/version" ]
+}
+
 
 mac_framework_bundle("electron_framework") {
     output_name = electron_framework_name
@@ -153,17 +256,18 @@ mac_framework_bundle("electron_framework") {
     framework_contents = [
         "Resources",
         "Libraries",
-        "Helpers",
     ]
-    # if (!is_mas_build) {
-    #   framework_contents += [ "Helpers" ]
-    # }
+    if (!is_mas_build) {
+      framework_contents += [ "Helpers" ]
+    }
     public_deps = [
-        ":electron_framework_libraries",
+        # ":electron_framework_libraries",
         ":electron_lib",
     ]
     deps = [
-        ":electron_framework_libraries",
+        ":electron_angle_library",
+        ":electron_swiftshader_library",
+        # ":electron_framework_libraries",
         ":electron_framework_resources",
         ":electron_xibs",
     ]
@@ -175,7 +279,7 @@ mac_framework_bundle("electron_framework") {
         "ELECTRON_BUNDLE_ID=$electron_mac_bundle_id.framework",
         "ELECTRON_VERSION=$electron_version",
     ]
-    include_dirs = [ ".", "//third_party/abseil-cpp" ]
+    include_dirs = [ ".", "//third_party/skia"]
     sources = filenames.framework_sources
     frameworks = []
 
@@ -191,13 +295,6 @@ mac_framework_bundle("electron_framework") {
         # Required for exporting all symbols of libuv.
         "-Wl,-force_load,obj/third_party/electron_node/deps/uv/libuv.a",
     ]
-
-    if (is_component_build) {
-        ldflags += [
-            "-rpath",
-            "@executable_path/../../../../../..",
-        ]
-    }
 }
 
 template("electron_helper_app") {
@@ -206,7 +303,9 @@ template("electron_helper_app") {
 
         output_name = electron_helper_name + invoker.helper_name_suffix
         deps = [ ":electron_framework+link" ]
-        deps += [ "//sandbox/mac:seatbelt" ]
+        if (!is_mas_build) {
+          deps += [ "//sandbox/mac:seatbelt" ]
+        }
         defines = [ "HELPER_EXECUTABLE" ]
         sources = [
             "shell/app/electron_main_mac.cc",
@@ -220,12 +319,16 @@ template("electron_helper_app") {
             "-rpath",
             "@executable_path/../../..",
         ]
-        if (is_component_build) {
-            ldflags += [
+        ldflags += [
             "-rpath",
             "@executable_path/../../../../../..",
-            ]
-        }
+        ]
+        # if (is_component_build) {
+        #     ldflags += [
+        #       "-rpath",
+        #       "@executable_path/../../../../../..",
+        #     ]
+        # }
     }
 }
 
@@ -251,16 +354,25 @@ foreach(helper_params, content_mac_helpers) {
 bundle_data("electron_app_framework_bundle_data") {
     sources = [ "$root_out_dir/$electron_framework_name.framework" ]
 
+    if (!is_mas_build) {
+      sources += get_target_outputs(":stripped_mantle_framework") +
+                 get_target_outputs(":stripped_reactiveobjc_framework") +
+                 get_target_outputs(":stripped_squirrel_framework")
+    }
+
     outputs = [ "{{bundle_contents_dir}}/Frameworks/{{source_file_part}}" ]
     public_deps = [
-        ":electron_framework+link",
+      ":electron_framework+link",
+      ":stripped_mantle_framework",
+      ":stripped_reactiveobjc_framework",
+      ":stripped_squirrel_framework",        
     ]
     # 这个东西必须要有 不然不生成这个helper运行会出错
-   foreach(helper_params, content_mac_helpers) {
-       sources +=
-       [ "$root_out_dir/${electron_helper_name}${helper_params[2]}.app" ]
-       public_deps += [ ":electron_helper_app_${helper_params[0]}" ]
-   }
+    foreach(helper_params, content_mac_helpers) {
+        sources +=
+        [ "$root_out_dir/${electron_helper_name}${helper_params[2]}.app" ]
+        public_deps += [ ":electron_helper_app_${helper_params[0]}" ]
+    }
 }
 
 typescript_build("default_app_js") {
@@ -304,7 +416,7 @@ asar("default_app_asar") {
 bundle_data("electron_app_resources") {
     public_deps = [
         ":default_app_asar",
-#        ":electron_app_strings_bundle_data",
+       ":electron_app_strings_bundle_data",
     ]
     sources = [
         "$root_out_dir/resources/default_app.asar",
@@ -423,7 +535,9 @@ source_set("electron_lib") {
         ":electron_fuses",
         ":electron_generate_node_defines",
         ":electron_js2c",
+        "buildflags",
         "chromium_src:chrome",
+        "chromium_src:chrome_spellchecker",
         "//base:base_static",
         "//base/allocator:buildflags",
         # 这个包似乎就是用来引入NSApplication这些东西
@@ -467,7 +581,7 @@ source_set("electron_lib") {
     # }
 
     public_deps = [
-        "//base",
+        # "//base",
         "//content/public/app",
     ]
 
@@ -485,6 +599,28 @@ source_set("electron_lib") {
         "//extensions/browser",
     ]
 
+    if (enable_pdf) {
+      # Printing depends on some //pdf code, so it needs to be built even if the
+      # pdf viewer isn't enabled.
+      deps += [
+        "//pdf",
+        "//pdf:features",
+      ]
+    }
+
+    if (enable_pdf_viewer) {
+      deps += [
+        "//chrome/browser/resources/pdf:resources",
+        "//components/pdf/browser",
+        "//components/pdf/renderer",
+        "//pdf:pdf_ppapi",
+      ]
+      # sources += [
+      #   "shell/browser/electron_pdf_web_contents_helper_client.cc",
+      #   "shell/browser/electron_pdf_web_contents_helper_client.h",
+      # ]
+    }
+
     if (is_mac) {
       deps += [ 
             "//components/remote_cocoa/app_shim",
@@ -494,9 +630,9 @@ source_set("electron_lib") {
       ]
     }
 
-    if (is_component_build) {
-      defines += [ "NODE_SHARED_MODE" ]
-    }
+    # if (is_component_build) {
+    #   defines += [ "NODE_SHARED_MODE" ]
+    # }
 
     frameworks = [
         "Foundation.framework",
@@ -511,7 +647,77 @@ source_set("electron_lib") {
         "ServiceManagement.framework",
         "StoreKit.framework",
     ]
+
+    cflags_objcc = [ "-fobjc-weak" ]
 }
+
+    # extract_symbols("electron_framework_syms") {
+    #   binary = "$root_out_dir/$electron_framework_name.framework/Versions/$electron_framework_version/$electron_framework_name"
+    #   symbol_dir = "$root_out_dir/breakpad_symbols"
+    #   dsym_file = "$root_out_dir/$electron_framework_name.dSYM/Contents/Resources/DWARF/$electron_framework_name"
+    #   deps = [ ":electron_framework" ]
+    # }
+
+    # foreach(helper_params, content_mac_helpers) {
+    #   _helper_target = helper_params[0]
+    #   _helper_bundle_id = helper_params[1]
+    #   _helper_suffix = helper_params[2]
+    #   extract_symbols("electron_helper_syms_${_helper_target}") {
+    #     binary = "$root_out_dir/$electron_helper_name${_helper_suffix}.app/Contents/MacOS/$electron_helper_name${_helper_suffix}"
+    #     symbol_dir = "$root_out_dir/breakpad_symbols"
+    #     dsym_file = "$root_out_dir/$electron_helper_name${_helper_suffix}.dSYM/Contents/Resources/DWARF/$electron_helper_name${_helper_suffix}"
+    #     deps = [ ":electron_helper_app_${_helper_target}" ]
+    #   }
+    # }
+
+    # extract_symbols("electron_app_syms") {
+    #   binary = "$root_out_dir/$electron_product_name.app/Contents/MacOS/$electron_product_name"
+    #   symbol_dir = "$root_out_dir/breakpad_symbols"
+    #   dsym_file = "$root_out_dir/$electron_product_name.dSYM/Contents/Resources/DWARF/$electron_product_name"
+    #   deps = [ ":electron_app" ]
+    # }
+
+    # extract_symbols("swiftshader_egl_syms") {
+    #   binary = "$root_out_dir/libswiftshader_libEGL.dylib"
+    #   symbol_dir = "$root_out_dir/breakpad_symbols"
+    #   dsym_file = "$root_out_dir/libswiftshader_libEGL.dylib.dSYM/Contents/Resources/DWARF/libswiftshader_libEGL.dylib"
+    #   deps =
+    #       [ "//third_party/swiftshader/src/OpenGL/libEGL:swiftshader_libEGL" ]
+    # }
+
+    # extract_symbols("swiftshader_gles_syms") {
+    #   binary = "$root_out_dir/libswiftshader_libGLESv2.dylib"
+    #   symbol_dir = "$root_out_dir/breakpad_symbols"
+    #   dsym_file = "$root_out_dir/libswiftshader_libGLESv2.dylib.dSYM/Contents/Resources/DWARF/libswiftshader_libGLESv2.dylib"
+    #   deps = [
+    #     "//third_party/swiftshader/src/OpenGL/libGLESv2:swiftshader_libGLESv2",
+    #   ]
+    # }
+
+    # extract_symbols("crashpad_handler_syms") {
+    #   binary = "$root_out_dir/chrome_crashpad_handler"
+    #   symbol_dir = "$root_out_dir/breakpad_symbols"
+    #   dsym_file = "$root_out_dir/chrome_crashpad_handler.dSYM/Contents/Resources/DWARF/chrome_crashpad_handler"
+    #   deps = [ "//components/crash/core/app:chrome_crashpad_handler" ]
+    # }
+
+    # group("electron_symbols") {
+    #   deps = [
+    #     ":electron_app_syms",
+    #     ":electron_framework_syms",
+    #     ":swiftshader_egl_syms",
+    #     ":swiftshader_gles_syms",
+    #   ]
+
+    #   if (!is_mas_build) {
+    #     deps += [ ":crashpad_handler_syms" ]
+    #   }
+
+    #   foreach(helper_params, content_mac_helpers) {
+    #     _helper_target = helper_params[0]
+    #     deps += [ ":electron_helper_syms_${_helper_target}" ]
+    #   }
+    # }
 
 grit("resources") {
   source = "electron_resources.grd"
@@ -552,25 +758,22 @@ mac_app_bundle("electron_app") {
         "shell/app/electron_main_mac.cc",
         "shell/common/electron_constants.cc",
     ]
-    include_dirs = [ ".", "//third_party/abseil-cpp" ]
-    defines = [ "HELPER_EXECUTABLE" ]
-    ldflags = [
-        "-rpath",
-        "@executable_path/../Frameworks",
-    ]
+    include_dirs = [ ".", "//third_party/abseil-cpp", "//third_party/skia" ]
     info_plist_target = ":electron_app_plist"
     deps = [
-        "//content",
         ":electron_app_framework_bundle_data",
         ":electron_app_resources",
         ":electron_app_plist",
         ":electron_fuses",
-        "//sandbox/mac:seatbelt",
         "//electron/buildflags",
     ]
     extra_substitutions = [
         "ELECTRON_BUNDLE_ID=$electron_mac_bundle_id",
         "ELECTRON_VERSION=$electron_version",
+    ]
+    ldflags = [
+        "-rpath",
+        "@executable_path/../Frameworks",
     ]
 }
 
@@ -685,6 +888,24 @@ action("libcxx_objects_zip") {
   outputs = [ "$root_build_dir/libcxx_objects.zip" ]
   args = rebase_path(outputs)
 }
+
+dist_zip("electron_dist_zip") {
+  data_deps = [
+    ":electron_app",
+    ":electron_version",
+    ":licenses",
+  ]
+  if (is_linux) {
+    data_deps += [ "//sandbox/linux:chrome_sandbox" ]
+  }
+  outputs = [ "$root_build_dir/dist.zip" ]
+}
+
+# group("electron") {
+#   public_deps = [ ":electron_app" ]
+# }
+
+
 
 #group("dada_test") {
 #    public_deps = [ ":electron_app" ]

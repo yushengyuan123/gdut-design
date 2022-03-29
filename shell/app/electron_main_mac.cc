@@ -17,6 +17,7 @@
 #endif
 
 int main(int argc, char* argv[]) {
+#if defined(HELPER_EXECUTABLE) && !defined(MAS_BUILD)    
   uint32_t exec_path_size = 0;
   int rv = _NSGetExecutablePath(NULL, &exec_path_size);
   if (rv != -1) {
@@ -31,6 +32,7 @@ int main(int argc, char* argv[]) {
     fprintf(stderr, "_NSGetExecutablePath: get path failed\n");
     abort();
   }
+
   // gpu的启动还和这个东西有关系的？？？
   sandbox::SeatbeltExecServer::CreateFromArgumentsResult seatbelt =
       sandbox::SeatbeltExecServer::CreateFromArguments(exec_path.get(), argc,
@@ -46,6 +48,7 @@ int main(int argc, char* argv[]) {
       abort();
     }
   }
+#endif  // defined(HELPER_EXECUTABLE) && !defined(MAS_BUILD)  
 
   return ElectronMain(argc, argv);
 }

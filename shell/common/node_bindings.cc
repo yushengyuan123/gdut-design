@@ -237,6 +237,7 @@ namespace electron {
                       node::EnvironmentFlags::kHideConsoleWindows |
                       node::EnvironmentFlags::kNoGlobalSearchPaths;             
 
+    printf("haha1\n");
 
     if (browser_env_ != BrowserEnvironment::kBrowser) {
       // Only one ESM loader can be registered per isolate -
@@ -261,7 +262,7 @@ namespace electron {
           static_cast<node::EnvironmentFlags::Flags>(flags));
       DCHECK(env);
     }
-
+printf("haha2\n");
     gin_helper::Dictionary process(context->GetIsolate(), env->process_object());
 
     process.Set("resourcesPath", resources_path);

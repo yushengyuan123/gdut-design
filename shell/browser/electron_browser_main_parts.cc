@@ -69,6 +69,7 @@ namespace electron {
   }
 
   void ElectronBrowserMainParts::PostEarlyInitialization() {
+    printf("nihao1\n");
     js_env_ = std::make_unique<JavascriptEnvironment>(node_bindings_->uv_loop());
 
     v8::HandleScope scope(js_env_->isolate());
@@ -79,9 +80,9 @@ namespace electron {
         js_env_->context(), js_env_->platform());
 
     node_env_ = std::make_unique<NodeEnvironment>(env);
-
+    printf("nihao\n");
     node_bindings_->LoadEnvironment(env);    
-
+printf("nihao2\n");
     InitializeFeatureList();
 
     // Initialize field trials.

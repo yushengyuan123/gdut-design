@@ -10,6 +10,7 @@ type templateProjectConfig = Pick<ElectronBuilder.parseOptions, 'parseUrl'>
 function generateConfig(
   options: ElectronBuilder.parseOptions
 ): templateProjectConfig {
+  console.log('生成的config', options)
   return {
     parseUrl: options.parseUrl,
   }

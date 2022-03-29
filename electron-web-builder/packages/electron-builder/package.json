@@ -6,7 +6,8 @@
   },
   "scripts": {
     "dev": "tsc --watch",
-    "eslint:init": "eslint --init"
+    "eslint:init": "eslint --init",
+    "build-template": "cd template && webpack"
   },
   "devDependencies": {
     "@typescript-eslint/eslint-plugin": "^5.10.1",
@@ -15,6 +16,9 @@
     "fs-extra": "^10.0.0",
     "tmp": "^0.2.1",
     "typescript": "^4.5.5",
-    "yargs": "^17.4.0"
+    "yargs": "^17.4.0",
+    "webpack": "^5.45.1",
+    "webpack-cli": "^4.7.2",
+    "ts-loader": "^9.2.3"
   }
 }

@@ -189,7 +189,6 @@ content::WebContents* WebContents::GetWebContents() const {
 gin::Handle<WebContents> WebContents::New(
     v8::Isolate* isolate,
     const gin_helper::Dictionary& options) {
-        printf("WebContents::New\n");
   gin::Handle<WebContents> handle =
       gin::CreateHandle(isolate, new WebContents(isolate, options));
   v8::TryCatch try_catch(isolate);
@@ -204,7 +203,6 @@ gin::Handle<WebContents> WebContents::New(
 v8::Local<v8::ObjectTemplate> WebContents::FillObjectTemplate(
     v8::Isolate* isolate,
     v8::Local<v8::ObjectTemplate> templ) {
-      printf("FillObjectTemplate\n");
   gin::InvokerOptions options;
   options.holder_is_first_argument = true;
   options.holder_type = "WebContents";

@@ -1,6 +1,9 @@
 import * as path from 'path';
 import { EventEmitter } from 'events';
 
+console.log('nihaoma');
+
+
 const Module = require('module');
 
 process.argv.splice(1, 1);

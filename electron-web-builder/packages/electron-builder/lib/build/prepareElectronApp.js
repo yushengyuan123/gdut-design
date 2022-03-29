@@ -4,6 +4,7 @@ exports.prepareElectronApp = void 0;
 const fs = require("fs-extra");
 const path = require("path");
 function generateConfig(options) {
+    console.log('生成的config', options);
     return {
         parseUrl: options.parseUrl,
     };
