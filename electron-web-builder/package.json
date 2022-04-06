@@ -25,7 +25,9 @@
   "author": "",
   "license": "ISC",
   "dependencies": {
+    "electron-log": "^4.4.6",
     "element-plus": "^2.1.7",
-    "vue": "^3.2.31"
+    "vue": "^3.2.31",
+    "vue-router": "4"
   }
 }

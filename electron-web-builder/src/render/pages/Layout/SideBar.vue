@@ -1,50 +1,50 @@
 <template>
-  <div class="left-side-bar-con">
-    <div class="menu-download menu-btn">
-      <img
-          style="width: 32px;
-          height: 32px"
-          src="../../asserts/add.png"
-          alt=""
-          @click="addTask"
-      >
+  <div class="aside-inner">
+    <div class="menu-top">
+      <div class="menu-download menu-btn">
+        <router-link to="/download">
+          <menu-download />
+        </router-link>
+      </div>
+      <div class="menu-download-list menu-btn" @click="addTask">
+        <add />
+      </div>
     </div>
-    <div class="menu-download-list menu-btn">
-      <img
-          style="width: 25px; height: 25px"
-          class="menu-download-list-img"
-          src="../../asserts/list.png"
-          alt=""
-      >
+    <div class="menu-bottom menu-btn">
+      <router-link to="/settings">
+        <perference />
+      </router-link>
     </div>
-
-    <AddTaskDialog
-        :showAddTaskDialog="showAddTaskDialog"
-    />
   </div>
+  <AddTaskDialog v-model:showDialog="showAddTaskDialog" />
 </template>
 
 <script setup lang="ts">
-import { ref, defineProps } from "vue"
-import AddTaskDialog from '../../component/AddTaskDialog/AddTaskDialog.vue'
+import { ref, defineProps } from "vue";
+import add from "@/components/Icons/add.vue"
+import perference from "@/components/Icons/perference.vue"
+import menuDownload from "@/components/Icons/menu-download.vue"
+import AddTaskDialog from "../../components/AddTaskDialog/AddTaskDialog.vue";
 
-const showAddTaskDialog = ref<boolean>(false)
-// const props = defineProps<{
-//   foo: boolean
-// }>({
-//   foo: true
-// })
+const showAddTaskDialog = ref<boolean>(false);
 
 const addTask = () => {
-  console.log('add')
-}
-
+  showAddTaskDialog.value = true;
+};
 </script>
 
 <style scoped lang="less">
-.left-side-bar-con {
+.aside-inner {
+  display: flex;
+  flex-flow: column;
+  height: 100%;
   width: 28px;
-  margin: 40px auto auto;
+  margin: auto;
+}
+
+.menu-top {
+  flex: 1;
+  margin-top: 20px;
 }
 
 .menu-download-list-img {
@@ -62,4 +62,8 @@ const addTask = () => {
   cursor: pointer;
 }
 
+.menu-bottom {
+  margin-bottom: 24px;
+  align-items: flex-end;
+}
 </style>

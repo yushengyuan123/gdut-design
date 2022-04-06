@@ -1,18 +1,14 @@
 <template>
   <div class="main-con">
     <div class="menu-side-bar">
-      <SideBar></SideBar>
+      <SideBar />
     </div>
-    <div class="task-bar-con">
-      <TaskBar></TaskBar>
-    </div>
-    <div class="task-details"></div>
+    <router-view></router-view>
   </div>
 </template>
 
-<script setup>
-import SideBar from './Layout/SideBar.vue'
-import TaskBar from "./Task/TaskBar";
+<script setup lang="ts">
+import SideBar from "./Layout/SideBar.vue"
 </script>
 
 <style scoped lang="less">
@@ -30,6 +26,6 @@ import TaskBar from "./Task/TaskBar";
 
 .task-details {
   flex: 1;
-  background-color: #343434;
+  background-color: white;
 }
 </style>

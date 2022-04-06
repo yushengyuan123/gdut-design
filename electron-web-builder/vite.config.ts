@@ -8,5 +8,10 @@ export default defineConfig({
   plugins: [
     vue(),
     VueJsx()
-  ]
+  ],
+  resolve: {
+    alias: {
+      '@': path.resolve(__dirname, "src/render") //把src改为@
+    }
+  }
 })

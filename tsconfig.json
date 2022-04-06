@@ -17,7 +17,8 @@
     "outDir": "ts-gen",
     "paths": {
       "@electron/internal/*": ["lib/*"]
-    }
+    },
+    "jsx": "react"
   },
   "exclude": [
     "electron.d.ts"

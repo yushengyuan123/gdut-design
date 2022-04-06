@@ -1,5 +1,6 @@
-import { BrowserWindow, app, Menu } from 'electron'
+import { BrowserWindow, app, Menu, ipcMain } from 'electron'
 import path from "path"
+import logger from "./core/Logger"
 
 const debuggerServerAddr = 'http://localhost:3000/'
 
@@ -13,6 +14,8 @@ class Application {
   initAppState() {
     app.whenReady().then(() => {
       this.createWindow()
+  
+      this.handleIpcMessage()
       // this.hiddenTopMenu()
     })
   }
@@ -48,6 +51,12 @@ class Application {
   
   hiddenTopMenu() {
     Menu.setApplicationMenu(null)
+  }
+  
+  handleIpcMessage() {
+    ipcMain.handle('command', (event, command, ...args) => {
+      logger.log('[electron-web-builder] ipc receive command', command, ...args)
+    })
   }
 }
 
