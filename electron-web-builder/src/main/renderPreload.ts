@@ -1,3 +1,5 @@
-import { ipcRenderer } from 'electron'
+import { registerPluginsInWindows } from "./vue-electron/install"
 
-console.log('渲染进程预先加载', ipcRenderer)
+registerPluginsInWindows()
+
+

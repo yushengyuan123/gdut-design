@@ -6,12 +6,18 @@
         <router-link :to="{path: item.path}" v-for="(item, index) in taskMenuItem" :class="'task-status-item ' +
       (focusItemIndex === index ? 'task-status-item-focus' : '')" @click="selectTask(index)">
           <div class="task-status-icon-con">
-            <playIcon v-if="index === 0" :strokeColor="focusItemIndex
-          === 0 ? StrokeColor.taskFocus : StrokeColor.defaultColor" />
-            <complete v-else :strokeColor="focusItemIndex
-          === 1 ? StrokeColor.taskFocus : StrokeColor.defaultColor" />
+            <playIcon v-if="index === 0 && focusItemIndex
+          === 0" :strokeColor="StrokeColor.taskFocus" />
+            <playIcon v-else-if="index === 0 && focusItemIndex
+          !== 0" :strokeColor="StrokeColor.defaultColor" />
+            <complete v-else-if="index === 1 && focusItemIndex === 1"
+                      :strokeColor="StrokeColor.taskFocus" />
+            <complete v-else :strokeColor="StrokeColor.defaultColor" />
           </div>
-          <div class="task-status-text">{{item.name}}</div>
+          <div
+              class="task-status-text"
+              :style="focusItemIndex === index ? 'color: #5b5bfa' : ''"
+          >{{item.name}}</div>
         </router-link>
       </div>
     </div>
@@ -89,7 +95,6 @@ export default defineComponent({
 
   .task-status-item-focus {
     background-color: #EAECF0;
-    color: #5b5bfa;
   }
 
   .task-status-item {
@@ -102,6 +107,7 @@ export default defineComponent({
     cursor: pointer;
     display: flex;
     flex-direction: row;
+    color: #4D515A;
 
     .task-status-text {
       font-size: 14px;

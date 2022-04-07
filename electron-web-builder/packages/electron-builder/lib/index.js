@@ -7,14 +7,23 @@ async function buildElectronApp(rawsOptions) {
     const templatePath = path.join(__dirname, '../', './template');
     const destinationPath = path.join(__dirname, '../', './output');
     const userSourceDir = path.join(__dirname, '../', 'output');
-    const outputDir = '/Users/yushengyuan/yushengyuan/study/chromium1/src/electron/electron-web-builder/packages/electron-builder/tests';
+    const useAdvanceOps = true;
+    const outputDir = rawsOptions.outputDir
+        || "/Users/yushengyuan/yushengyuan/study/chromium1/src/electron/electron-web-builder/packages/electron-builder/tests";
     const packagerOptions = {
         sourceDir: userSourceDir,
         outputDir: outputDir,
+        appName: rawsOptions.appName || 'default',
         asar: false,
+        useAdvanceOps: {
+            startUp: useAdvanceOps,
+            cachePath: ''
+        },
         platform: 'mac',
-        appName: 'whatsapp'
     };
+    if (useAdvanceOps) {
+        packagerOptions.useAdvanceOps.cachePath = '/Users/yushengyuan/yushengyuan/cache/electron-v18.0.0-darwin-x64';
+    }
     await (0, prepareElectronApp_1.prepareElectronApp)(templatePath, destinationPath, rawsOptions);
     await (0, electron_packager_1.packager)(packagerOptions);
     console.log("complete");

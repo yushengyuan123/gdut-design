@@ -4,6 +4,7 @@
   "bin": {
     "electron-bulider": "lib/cli.js"
   },
+  "main": "./lib/index.js",
   "scripts": {
     "dev": "tsc --watch",
     "eslint:init": "eslint --init",

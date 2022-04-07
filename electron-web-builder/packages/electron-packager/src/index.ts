@@ -9,10 +9,12 @@ import * as path from "path"
 
 class Packager {
   public ops: ElectronPackager.startupOptions
+  public useAdvanceOps: boolean
   
   constructor(options: ElectronPackager.startupOptions) {
     this.ops = options
     this.ops.asar = options.asar || false
+    this.useAdvanceOps = options.useAdvanceOps.startUp
   }
   
   async createAppDir() {
@@ -28,8 +30,18 @@ class Packager {
     const platform = this.ops.platform
   
     const buildDir = await this.createAppDir()
-    const zipPath = await this.downloadElectronZip()
-    await this.extractElectronZip(zipPath, buildDir)
+    
+    // 是否启用electron缓存功能
+    if (!this.useAdvanceOps) {
+      const zipPath = await this.downloadElectronZip()
+      await this.extractElectronZip(zipPath, buildDir)
+    } else {
+      console.log('使用缓存复制功能', buildDir)
+      const cachePath = this.ops.useAdvanceOps.cachePath
+      await this.copyElectronFromCachePath(cachePath, buildDir)
+      
+      console.log('复制完成')
+    }
     
     this.ops.outputDir = buildDir
     
@@ -50,11 +62,15 @@ class Packager {
     return await download.downloadElectronZip()
   }
   
+  async copyElectronFromCachePath(cachePath, target) {
+    return await fs.copy(cachePath, target)
+  }
+  
   async extractElectronZip(zipPath, target) {
-    console.log('开始解压，解压路径')
+    console.log('开始解压，解压路径', zipPath)
     
     if (await fs.pathExists(target)) {
-      console.log('当前解压文件出现同名')
+      console.log('当前解压文件出现同名', target)
       fs.removeSync(target)
     }
     

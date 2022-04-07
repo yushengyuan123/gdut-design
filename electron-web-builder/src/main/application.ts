@@ -1,14 +1,30 @@
 import { BrowserWindow, app, Menu, ipcMain } from 'electron'
+import { EventEmitter } from 'events'
 import path from "path"
-import logger from "./core/Logger"
+import { registerCommands } from "./command"
+import appServer from "./core/tcpServer"
+import logger from 'electron-log'
+import {registerKoaApiRouter} from "./core/apiRouter"
+
+const bodyParser = require('koa-bodyparser')
 
 const debuggerServerAddr = 'http://localhost:3000/'
 
-class Application {
+class Application extends EventEmitter {
   private singletonBrowser: BrowserWindow | undefined
+  private appServer: any
   
   constructor() {
+    super()
+    this.handleEvents()
+    
     this.initAppState()
+    
+    this.initBackEndHttpServer()
+    
+    this.initApiRouter()
+    
+    this.initKoaMiddleWare()
   }
   
   initAppState() {
@@ -20,6 +36,28 @@ class Application {
     })
   }
   
+  handleEvents() {
+    registerCommands.call(this)
+  }
+  
+  initBackEndHttpServer() {
+    this.appServer = appServer
+  }
+  
+  initApiRouter() {
+    const app = this.appServer.getApp()
+    app.use(bodyParser())
+    
+    registerKoaApiRouter()
+  }
+  
+  initKoaMiddleWare() {
+    const app = this.appServer.getApp()
+    const router = this.appServer.getRouter()
+  
+    app.use(router.routes()).use(router.allowedMethods())
+  }
+  
   getMainBrowser() {
     if (!this.singletonBrowser) {
       return null
@@ -29,11 +67,12 @@ class Application {
   
   createWindow () {
     const win = new BrowserWindow({
-      width: 800,
+      width: 1200,
       height: 600,
       webPreferences: {
         preload: path.join(__dirname, 'renderPreload.js'),
         contextIsolation: false,
+        webSecurity: false
       },
       titleBarStyle: 'hidden'
     })
@@ -54,8 +93,8 @@ class Application {
   }
   
   handleIpcMessage() {
-    ipcMain.handle('command', (event, command, ...args) => {
-      logger.log('[electron-web-builder] ipc receive command', command, ...args)
+    ipcMain.on('command', (event, command, ...args) => {
+      this.emit(command, ...args)
     })
   }
 }

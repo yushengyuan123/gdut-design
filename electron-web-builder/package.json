@@ -2,10 +2,10 @@
   "name": "electron-web-builder",
   "version": "1.0.0",
   "description": "",
-  "main": "lib/index.js",
+  "main": "lib/main/index.js",
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1",
-    "start": "electron .",
+    "start": "electron . --trace-warnings",
     "start:main:dev:ts": "tsc --watch",
     "start:render:dev": "vite"
   },
@@ -25,8 +25,13 @@
   "author": "",
   "license": "ISC",
   "dependencies": {
+    "axios": "^0.26.1",
+    "electron-is": "^3.0.0",
     "electron-log": "^4.4.6",
     "element-plus": "^2.1.7",
+    "koa": "^2.13.4",
+    "koa-bodyparser": "^4.3.0",
+    "koa-router": "^10.1.1",
     "vue": "^3.2.31",
     "vue-router": "4"
   }

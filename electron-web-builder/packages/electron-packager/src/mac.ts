@@ -76,11 +76,10 @@ class MacApp implements ElectronPackager.MacApp {
     }
   }
   
-  
   // 正式创建应用
   async createApp() {
     await this.copyExtraResources()
-    await this.deleteElectronDefaultAsar()
+    // await this.deleteElectronDefaultAsar()
     await this.renameElectronApp()
   }
   

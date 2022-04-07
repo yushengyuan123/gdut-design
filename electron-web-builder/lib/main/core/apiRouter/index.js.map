@@ -1,0 +1,1 @@
+{"version":3,"file":"index.js","sourceRoot":"","sources":["../../../../src/main/core/apiRouter/index.ts"],"names":[],"mappings":";;;;;;AAAA,wDAAsC;AAEtC,MAAM,UAAU,GAAG;IACjB,iBAAc;CACf,CAAA;AAED,SAAS,oBAAoB;IAC3B,UAAU,CAAC,OAAO,CAAC,IAAI,CAAC,EAAE;QACxB,IAAI,EAAE,CAAA;IACR,CAAC,CAAC,CAAA;AACJ,CAAC;AAGC,oDAAoB"}

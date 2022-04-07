@@ -12,5 +12,6 @@ import { StrokeColor } from './types'
 const props = defineProps<{
   strokeColor: StrokeColor
 }>();
+
 const curColor: StrokeColor = props.strokeColor
 </script>

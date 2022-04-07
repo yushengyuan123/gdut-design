@@ -23,12 +23,23 @@
       <el-form-item label="重命名:" label-width="100px">
         <el-input v-model="addTaskForm.name" />
       </el-form-item>
+      <el-form-item label="解析url:" label-width="100px">
+        <el-input v-model="addTaskForm.parseDir" />
+      </el-form-item>
       <el-form-item label="存储路径:" label-width="100px">
-        <el-input v-model="addTaskForm.name" />
+        <el-input v-model="addTaskForm.outputDir" />
       </el-form-item>
     </el-form>
+    <div v-if="showAdvanced">
+      <el-form :model="advanceForm" label-width="120px" label-position="left">
+        <el-form-item label="缓存路径:" label-width="100px">
+          <el-input v-model="advanceForm.cachePath" />
+        </el-form-item>
+      </el-form>
+    </div>
     <template #footer>
       <div class="dialog-footer">
+        <el-checkbox v-model="showAdvanced" label="高级选项" class="chk"/>
         <el-button @click="dialogClose">取消</el-button>
         <el-button
             type="primary"
@@ -42,25 +53,35 @@
 </template>
 
 <script setup lang="ts">
-import { ref, defineProps, defineEmits, reactive } from "vue";
-// import { ipcRenderer } from 'electron'
-
-
-interface addTaskFormData {
-  name: string;
-  dir: string;
-  desc: string
-}
+import {
+  defineProps,
+  defineEmits,
+  reactive,
+  toRaw, ref
+} from "vue";
+import {
+  taskAddOptions
+} from "../../../common/types";
+import {
+  ElMessage
+} from "element-plus";
+import axios from '@/client/api'
+import {AxiosResponse} from "axios";
 
 const props = defineProps<{
   showDialog: boolean;
 }>();
 
-const addTaskForm = reactive<addTaskFormData>({
-  name: "nihao",
+const showAdvanced = ref<boolean>(true)
+const addTaskForm = reactive<taskAddOptions>({
+  name: "whatsapp",
   desc: '任务描述',
-  dir: "capo",
+  outputDir: "/Users/yushengyuan/yushengyuan/tests",
+  parseDir: 'https://www.baidu.com'
 });
+const advanceForm = reactive({
+  cachePath: '/Users/yushengyuan/yushengyuan/tests/dist'
+})
 
 const emitEvents = defineEmits<{
   (e: "update:showDialog", status: boolean): void;
@@ -73,8 +94,17 @@ const dialogClose = () => {
 };
 
 const taskSubmit  = () => {
-  console.log('创建任务')
-  // ipcRenderer.send('command', 'task:add-task')
+  const basicForm = toRaw(addTaskForm)
+
+  axios.post('/task/add', {
+    name: basicForm.name,
+    desc: basicForm.desc,
+    outputDir: basicForm.outputDir,
+    parseUrl: basicForm.parseDir,
+  }).then(res => {
+    ElMessage.success('任务添加成功')
+    console.log(res)
+  })
 }
 
 </script>
@@ -113,6 +143,21 @@ const taskSubmit  = () => {
     background-color: #f5f5f5;
     border-radius: 0 0 5px 5px;
     text-align: right !important;
+  }
+}
+
+.dialog-footer {
+  .chk {
+    float: left;
+    line-height: 28px;
+    &.el-checkbox {
+      & .el-checkbox__input {
+        line-height: 19px;
+      }
+      & .el-checkbox__label {
+        padding-left: 6px;
+      }
+    }
   }
 }
 

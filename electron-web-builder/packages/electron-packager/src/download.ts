@@ -12,8 +12,6 @@ async function downloadElectronZip() {
   })
 }
 
-
-
 export {
   downloadElectronZip
 }

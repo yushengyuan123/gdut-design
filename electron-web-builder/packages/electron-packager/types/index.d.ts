@@ -11,8 +11,12 @@ declare namespace ElectronPackager {
     sourceDir: string,
     // 资源的输出目录
     outputDir: string,
+    platform: "mac" | "win",
     asar?: boolean,
-    platform: "mac" | "win"
+    useAdvanceOps: {
+      startUp: boolean,
+      cachePath: string
+    }
   }
   
   class MacApp {

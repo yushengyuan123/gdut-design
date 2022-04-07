@@ -7,12 +7,13 @@ import menuFinish from '../pages/Task/menu-finish.vue'
 const routes: RouteRecordRaw[] = [
   {
     path: '/',
-    redirect: '/settings'
+    redirect: '/download'
   },
   {
     path: '/download',
     component: download,
     name: 'download',
+    redirect: '/download/pending',
     children: [
       {
         path: 'pending',
