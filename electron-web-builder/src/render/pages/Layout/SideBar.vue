@@ -24,6 +24,7 @@ import { ref, defineProps } from "vue";
 import add from "@/components/Icons/add.vue"
 import perference from "@/components/Icons/perference.vue"
 import menuDownload from "@/components/Icons/menu-download.vue"
+import iosSwitch from '@/components/Icons/ios-switch.vue'
 import AddTaskDialog from "../../components/AddTaskDialog/AddTaskDialog.vue";
 
 const showAddTaskDialog = ref<boolean>(false);

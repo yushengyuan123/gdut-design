@@ -34,7 +34,10 @@ export default defineComponent({
     [taskPending.name]: taskPending
   },
   setup() {
-    const taskList = ref<taskListData[]>([])
+    const taskList = ref<taskListData[]>([{
+      taskName: '123',
+      taskId: 1
+    }])
 
     return {
       taskList

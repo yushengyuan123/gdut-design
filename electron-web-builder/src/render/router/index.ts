@@ -3,6 +3,7 @@ import download from "../pages/download.vue"
 import settings from "../pages/settings.vue"
 import menuPending from '../pages/Task/menu-pending.vue'
 import menuFinish from '../pages/Task/menu-finish.vue'
+import baseSettings from '../pages/Preference/base-settings.vue'
 
 const routes: RouteRecordRaw[] = [
   {
@@ -30,7 +31,15 @@ const routes: RouteRecordRaw[] = [
   {
     path: '/settings',
     component: settings,
-    name: 'settings'
+    name: 'settings',
+    redirect: '/settings/baseSettings',
+    children: [
+      {
+        path: 'baseSettings',
+        component: baseSettings,
+        name: 'baseSettings'
+      }
+    ]
   }
 ]
 

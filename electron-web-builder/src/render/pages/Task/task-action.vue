@@ -3,12 +3,20 @@
     <div class="task-item-action">
       <file />
     </div>
+    <div class="task-item-action" @click="deleteTask">
+      <deleteIcon />
+    </div>
+    <div class="task-item-action">
+      <task-details />
+    </div>
   </div>
 </template>
 
 <script lang="ts">
 import { defineComponent, ref } from "vue";
 import file from "@/components/Icons/file.vue"
+import deleteIcon from "@/components/Icons/delete.vue"
+import taskDetails from "@/components/Icons/task-details.vue"
 
 interface actions {
   actionName: string
@@ -17,50 +25,57 @@ interface actions {
 export default defineComponent({
   name: 'task-actions',
   components: {
-    file
+    file,
+    deleteIcon,
+    'task-details': taskDetails
   },
-  setup() {
-    const taskActions = ref<actions[]>([
-      {
-        actionName: 'add'
-      }
-    ])
+  props: {
+
+  },
+  emits: [
+    'deleteTask'
+  ],
+  setup(props, context) {
+    const deleteTask = () => {
+      context.emit('deleteTask')
+    }
+
+    return {
+      deleteTask
+    }
   },
 })
 </script>
 
 <style scoped lang="less">
 .task-action-con {
-  // width: 28px;
-  position: absolute;
-  height: 22px;
-  top: 16px;
-  right: 12px;
+  display: flex;
+  align-items: center;
+  height: 24px;
   padding: 0 10px;
   margin: 0;
   overflow: hidden;
-  user-select: none;
+  float: right;
   cursor: default;
   text-align: right;
-  direction: rtl;
   border: 1px solid #F5F5F5;
   color: black;
   //background-color: $--task-item-action-background;
   border-radius: 14px;
   //transition: $--all-transition;
   //&:hover {
-  //  border-color: $--task-item-action-hover-border-color;
-  //  color: $--task-item-action-hover-color;
-  //  background-color: $--task-item-action-hover-background;
-  //  width: auto;
+  //  background-color: #5b5bfa;
   //}
   &> .task-item-action {
     display: inline-block;
     box-sizing: border-box;
-    padding: 2px;
-    margin: 0 4px;
+    margin: 0 8px;
     font-size: 0;
     cursor: pointer;
+  }
+  .icon-con {
+    margin-left: 7px;
+    margin-right: 7px;
   }
 }
 </style>

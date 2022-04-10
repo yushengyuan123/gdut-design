@@ -4,19 +4,19 @@
       <div class="download-header">已完成</div>
     </el-header>
     <el-main class="panel-content">
-      <task-list />
+      <finish-list />
     </el-main>
   </el-container>
 </template>
 
 <script lang="ts">
-import taskList from "./taskList.vue";
 import { defineComponent } from "vue";
+import finishList from "./finishList.vue";
 
 export default defineComponent({
   name: "menu-finish",
   components: {
-    [taskList.name]: taskList
+    [finishList.name]: finishList
   }
 })
 </script>
