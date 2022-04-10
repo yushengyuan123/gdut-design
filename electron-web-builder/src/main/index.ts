@@ -6,6 +6,8 @@ process.env.CUR_MODE = 'debug'
 
 const application = new Application()
 
-
+export {
+  application
+}
 
 

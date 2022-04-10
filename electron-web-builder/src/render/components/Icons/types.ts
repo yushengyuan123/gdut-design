@@ -1,5 +1,5 @@
 enum StrokeColor  {
-  taskFocus = "#5b5bfa",
+  Focus = "#5b5bfa",
   defaultColor = "#303133"
 }
 

@@ -5,14 +5,20 @@ import { registerCommands } from "./command"
 import appServer from "./core/tcpServer"
 import logger from 'electron-log'
 import {registerKoaApiRouter} from "./core/apiRouter"
+import { connectMysql } from "./core/database"
+import {
+  connInstance
+} from "./core/database/types"
 
 const bodyParser = require('koa-bodyparser')
 
 const debuggerServerAddr = 'http://localhost:3000/'
 
+
 class Application extends EventEmitter {
   private singletonBrowser: BrowserWindow | undefined
   private appServer: any
+  private mysqlConnectObj!: connInstance
   
   constructor() {
     super()
@@ -25,6 +31,12 @@ class Application extends EventEmitter {
     this.initApiRouter()
     
     this.initKoaMiddleWare()
+    
+    this.initDataBase()
+  }
+  
+  getMysqlConnectObj(): connInstance {
+    return this.mysqlConnectObj
   }
   
   initAppState() {
@@ -56,6 +68,11 @@ class Application extends EventEmitter {
     const router = this.appServer.getRouter()
   
     app.use(router.routes()).use(router.allowedMethods())
+  }
+  
+  initDataBase() {
+    this.mysqlConnectObj = connectMysql()
+    this.mysqlConnectObj.connect()
   }
   
   getMainBrowser() {

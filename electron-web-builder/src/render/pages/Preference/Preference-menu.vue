@@ -1,22 +1,16 @@
 <template>
   <div class="task-bar-con">
     <div class="task-status-list-con">
-      <div class="task-list-title">任务列表</div>
+      <div class="task-list-title">偏好设置</div>
       <div class="task-status-list-con">
         <router-link :to="{path: item.path}" v-for="(item, index) in taskMenuItem" :class="'task-status-item ' +
       (focusItemIndex === index ? 'task-status-item-focus' : '')" @click="selectTask(index)">
           <div class="task-status-icon-con">
-            <playIcon v-if="index === 0 && focusItemIndex
-          === 0" :strokeColor="StrokeColor.Focus" />
-            <playIcon v-else-if="index === 0 && focusItemIndex
-          !== 0" :strokeColor="StrokeColor.defaultColor" />
-            <complete v-else-if="index === 1 && focusItemIndex === 1"
-                      :strokeColor="StrokeColor.Focus" />
-            <complete v-else :strokeColor="StrokeColor.defaultColor" />
+            <ios-switch :strokeColor="StrokeColor.Focus"/>
           </div>
           <div
               class="task-status-text"
-              :style="focusItemIndex === index ? 'color: #5b5bfa' : ''"
+              :style="focusItemIndex === index ? `color: ${StrokeColor.Focus}` : ''"
           >{{item.name}}</div>
         </router-link>
       </div>
@@ -26,9 +20,8 @@
 
 <script lang="ts">
 import {defineComponent, ref} from "vue"
-import { StrokeColor } from "../../components/Icons/types"
-import playIcon from '@/components/Icons/playIcon.vue'
-import complete from '@/components/Icons/complete.vue'
+import { StrokeColor } from "@/components/Icons/types"
+import iosSwitch from '@/components/Icons/ios-switch.vue'
 
 interface taskMenuRouterItem {
   name: string,
@@ -37,22 +30,16 @@ interface taskMenuRouterItem {
 }
 
 export default defineComponent({
-  name: 'TaskBar',
+  name: 'preference-menu',
   components: {
-    playIcon,
-    complete
+    'ios-switch': iosSwitch
   },
   setup() {
     const taskMenuItem: taskMenuRouterItem[] = [
       {
-        name: '下载中',
+        name: '基础设置',
         path: '/download/pending',
         id: 1
-      },
-      {
-        name: '已完成',
-        path: '/download/finish',
-        id: 2
       }
     ]
 

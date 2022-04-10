@@ -9,11 +9,13 @@ const path_1 = __importDefault(require("path"));
 const command_1 = require("./command");
 const tcpServer_1 = __importDefault(require("./core/tcpServer"));
 const apiRouter_1 = require("./core/apiRouter");
+const database_1 = require("./core/database");
 const bodyParser = require('koa-bodyparser');
 const debuggerServerAddr = 'http://localhost:3000/';
 class Application extends events_1.EventEmitter {
     singletonBrowser;
     appServer;
+    mysqlConnectObj;
     constructor() {
         super();
         this.handleEvents();
@@ -21,6 +23,10 @@ class Application extends events_1.EventEmitter {
         this.initBackEndHttpServer();
         this.initApiRouter();
         this.initKoaMiddleWare();
+        this.initDataBase();
+    }
+    getMysqlConnectObj() {
+        return this.mysqlConnectObj;
     }
     initAppState() {
         electron_1.app.whenReady().then(() => {
@@ -44,6 +50,10 @@ class Application extends events_1.EventEmitter {
         const app = this.appServer.getApp();
         const router = this.appServer.getRouter();
         app.use(router.routes()).use(router.allowedMethods());
+    }
+    initDataBase() {
+        this.mysqlConnectObj = (0, database_1.connectMysql)();
+        this.mysqlConnectObj.connect();
     }
     getMainBrowser() {
         if (!this.singletonBrowser) {
