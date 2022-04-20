@@ -1,23 +1,43 @@
 <template>
   <div class="task-bar-con">
     <div class="task-status-list-con">
-      <div class="task-list-title">任务列表</div>
+      <div class="task-list-title header-title">任务列表</div>
       <div class="task-status-list-con">
-        <router-link :to="{path: item.path}" v-for="(item, index) in taskMenuItem" :class="'task-status-item ' +
-      (focusItemIndex === index ? 'task-status-item-focus' : '')" @click="selectTask(index)">
+        <router-link
+            :to="{path: '/download/pending'}"
+            :class="'task-status-item ' + (focusItemIndex === 0 ? 'task-status-item-focus' : '')"
+            @click="selectTask(0)"
+        >
           <div class="task-status-icon-con">
-            <playIcon v-if="index === 0 && focusItemIndex
-          === 0" :strokeColor="StrokeColor.Focus" />
-            <playIcon v-else-if="index === 0 && focusItemIndex
-          !== 0" :strokeColor="StrokeColor.defaultColor" />
-            <complete v-else-if="index === 1 && focusItemIndex === 1"
-                      :strokeColor="StrokeColor.Focus" />
-            <complete v-else :strokeColor="StrokeColor.defaultColor" />
+            <mo-icons
+                name="caretRight"
+                :style="[ focusItemIndex === 0 ? activeColor : '' ]"
+            ></mo-icons>
           </div>
           <div
               class="task-status-text"
-              :style="focusItemIndex === index ? 'color: #5b5bfa' : ''"
-          >{{item.name}}</div>
+              :style="focusItemIndex === 0 ? activeColor : ''"
+          >
+            下载中
+          </div>
+        </router-link>
+        <router-link
+            :to="{path: '/download/finish'}"
+            :class="'task-status-item ' + (focusItemIndex === 1 ? 'task-status-item-focus' : '')"
+            @click="selectTask(1)"
+        >
+          <div class="task-status-icon-con">
+            <mo-icons
+                name="checkSuccess"
+                :style="[ focusItemIndex === 1 ? activeColor : '' ]"
+            ></mo-icons>
+          </div>
+          <div
+              class="task-status-text"
+              :style="focusItemIndex === 1 ? activeColor : ''"
+          >
+            已完成
+          </div>
         </router-link>
       </div>
     </div>
@@ -25,10 +45,13 @@
 </template>
 
 <script lang="ts">
-import {defineComponent, ref} from "vue"
+import {computed, defineComponent, ref} from "vue"
 import { StrokeColor } from "../../components/Icons/types"
-import playIcon from '@/components/Icons/playIcon.vue'
-import complete from '@/components/Icons/complete.vue'
+import { storeToRefs } from "pinia";
+import {
+  usePreferenceStore,
+  THEME_COLOR_VALUE
+} from "../../pinia/preference"
 
 interface taskMenuRouterItem {
   name: string,
@@ -38,24 +61,21 @@ interface taskMenuRouterItem {
 
 export default defineComponent({
   name: 'TaskBar',
-  components: {
-    playIcon,
-    complete
-  },
   setup() {
-    const taskMenuItem: taskMenuRouterItem[] = [
-      {
-        name: '下载中',
-        path: '/download/pending',
-        id: 1
-      },
-      {
-        name: '已完成',
-        path: '/download/finish',
-        id: 2
+    const preferenceStore = usePreferenceStore()
+    const preferenceStoreRef = storeToRefs(preferenceStore)
+    const activeColor = computed(() => {
+      const { appThemeColor } = preferenceStoreRef
+      if (appThemeColor.value === THEME_COLOR_VALUE.DARK) {
+        return {
+          color: '#ffffff'
+        }
+      } else {
+        return {
+          color: 'rgb(91, 91, 250)'
+        }
       }
-    ]
-
+    })
     const focusItemIndex = ref(0)
     const selectTask = (
         index: number
@@ -65,7 +85,7 @@ export default defineComponent({
 
     return {
       focusItemIndex,
-      taskMenuItem,
+      activeColor,
       StrokeColor,
       selectTask
     }
@@ -76,25 +96,16 @@ export default defineComponent({
 <style scoped lang="less">
 .task-bar-con {
   height: 100%;
-  width: 160px;
   color: white;
   padding: 0 16px;
-  background-color: #F4F5F7;
 }
 
 .task-status-list-con {
-  color: black;
-
   .task-list-title {
     line-height: 24px;
     font-size: 16px;
     margin-bottom: 28px;
-    padding-top: 40px;
-    color: #303133;
-  }
-
-  .task-status-item-focus {
-    background-color: #EAECF0;
+    padding-top: 44px;
   }
 
   .task-status-item {
@@ -107,7 +118,6 @@ export default defineComponent({
     cursor: pointer;
     display: flex;
     flex-direction: row;
-    color: #4D515A;
 
     .task-status-text {
       font-size: 14px;

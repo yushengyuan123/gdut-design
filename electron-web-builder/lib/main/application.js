@@ -12,6 +12,7 @@ const apiRouter_1 = require("./core/apiRouter");
 const database_1 = require("./core/database");
 const bodyParser = require('koa-bodyparser');
 const debuggerServerAddr = 'http://localhost:3000/';
+process.env['ELECTRON_DISABLE_SECURITY_WARNINGS'] = 'true';
 class Application extends events_1.EventEmitter {
     singletonBrowser;
     appServer;
@@ -63,14 +64,14 @@ class Application extends events_1.EventEmitter {
     }
     createWindow() {
         const win = new electron_1.BrowserWindow({
-            width: 1200,
-            height: 600,
+            width: 838,
+            height: 768,
             webPreferences: {
                 preload: path_1.default.join(__dirname, 'renderPreload.js'),
                 contextIsolation: false,
                 webSecurity: false
             },
-            titleBarStyle: 'hidden'
+            titleBarStyle: 'hiddenInset',
         });
         this.singletonBrowser = win;
         if (process.env.CUR_MODE == 'debug') {

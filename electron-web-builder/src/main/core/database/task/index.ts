@@ -5,27 +5,62 @@ import type {
   ColValues,
   taskTableColumn
 } from '../types'
+import logger from "electron-log";
+import {deleteSql} from "../utils";
 
-function addTaskInfo() {
+async function addTaskInfo(
+  task_id: string | null,
+  task_name: string,
+  task_url: string,
+  task_icon_url: string,
+  task_desc: string,
+  task_create_time: string
+) {
   const conInstance = application.getMysqlConnectObj()
-  const columnValue: taskTableColumn[]
+  const columnValueMap: taskTableColumn[]
     = ['task_id', 'task_name', 'task_url', 'task_icon_url', 'task_desc', 'task_create_time']
-  const insertValue: ColValues<taskTableColumn>[] = []
+  const valuesArr = [task_id, task_name, task_url, task_icon_url, task_desc, task_create_time]
+  const insertValueMap: ColValues<taskTableColumn>[] = []
   
-  columnValue.forEach(colName => {
-    insertValue.push({
+  columnValueMap.forEach((colName, index) => {
+    insertValueMap.push({
       columns: colName,
-      value: '321'
+      value: valuesArr[index]
     })
   })
   
-  conInstance.insert(
+  await conInstance.insert(
     'task_info',
-    insertValue,
-    []
+    insertValueMap
   )
 }
 
+async function queryAllTaskInfo() {
+  const conInstance = application.getMysqlConnectObj()
+  const columns: taskTableColumn[]
+    = ['task_id', 'task_name', 'task_url', 'task_icon_url', 'task_desc', 'task_create_time']
+  
+  type taskResData<R = 'task_id'> = {
+    [key in taskTableColumn]: R extends 'task_id' ? number : string
+  }
+  
+  const res: taskResData[] = await conInstance.select(
+    'task_info',
+    columns,
+    null
+  )
+  
+  return res
+}
+
+async function removeTask(
+  taskId: number
+) {
+  await deleteSql('task_info', `task_id = ${taskId}`)
+}
+
 export {
-  addTaskInfo
+  addTaskInfo,
+  queryAllTaskInfo,
+  removeTask
 }

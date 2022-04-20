@@ -1,31 +1,67 @@
 <template>
-  <div class="main-con">
-    <div class="menu-side-bar">
-      <SideBar />
-    </div>
+  <title-draggable />
+  <el-container id="container">
+    <side-bar></side-bar>
     <router-view></router-view>
-  </div>
+  </el-container>
 </template>
 
-<script setup lang="ts">
+<script lang="ts">
+import {defineComponent, onBeforeMount, watch} from "vue";
 import SideBar from "./Layout/SideBar.vue"
+import {THEME_COLOR_VALUE, usePreferenceStore} from "@/pinia/preference";
+import titleDragBar from "./Layout/titleDragBar.vue"
+
+export default defineComponent({
+  components: {
+    'side-bar': SideBar,
+    [titleDragBar.name]: titleDragBar
+  },
+  setup() {
+    const preferenceStore = usePreferenceStore()
+    const themeClass = () => {
+      let theme = 'theme-'
+      switch (preferenceStore.appThemeColor) {
+        case THEME_COLOR_VALUE.AUTO: {
+          theme += 'auto'
+          break
+        }
+        case THEME_COLOR_VALUE.LIGHT: {
+          theme += 'light'
+          break
+        }
+        case  THEME_COLOR_VALUE.DARK: {
+          theme += 'dark'
+        }
+      }
+      return theme
+    }
+
+    watch(() => {
+      return preferenceStore.appThemeColor
+    }, () => {
+      updateRootClass()
+    })
+
+    const updateRootClass = () => {
+      document.documentElement.className = themeClass()
+    }
+
+    onBeforeMount(() => {
+      updateRootClass()
+    })
+  }
+})
 </script>
 
 <style scoped lang="less">
-.main-con {
-  height: 100%;
-  display: flex;
-  flex-direction: row;
-}
-
 .menu-side-bar {
   height: 100%;
   width: 78px;
-  background-color: black;
+  background-color: transparent;
 }
 
 .task-details {
-  flex: 1;
   background-color: white;
 }
 </style>

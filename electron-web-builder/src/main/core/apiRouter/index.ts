@@ -1,4 +1,4 @@
-import initTaskRouter from "./addTask"
+import initTaskRouter from "./taskController"
 
 const routerFunc = [
   initTaskRouter

@@ -1,5 +1,6 @@
 enum commandSorts {
-  AddTask = 'task:add-task'
+  systemOpenDefaultBrowser = 'system:open-browser',
+  systemOpenFinderFolder = 'system:open-finder'
 }
 
 export {

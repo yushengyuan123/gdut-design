@@ -1,7 +1,7 @@
 <template>
   <el-container>
-    <el-header>
-      <div class="settings-header">基础设置</div>
+    <el-header class="panel-header">
+      <div class="settings-header header-title">基础设置</div>
     </el-header>
     <el-main class="panel-content">
       <el-form
@@ -42,7 +42,7 @@
         <el-button type="primary" size="default">
           保存并应用
         </el-button>
-        <el-button type="primary" size="default">
+        <el-button size="default">
           放弃
         </el-button>
       </div>
@@ -98,13 +98,11 @@ export default defineComponent({
 }
 .settings-header {
   width: 100%;
-  padding: 30px 0 12px;
-  border-bottom: 2px solid rgba(0, 0, 0, 0.1);
   font-size: 15px;
 }
 .form-preference {
   position: relative;
-  padding: 60px 10% 64px 16px;
+  padding: 20px 10% 64px 16px;
 }
 .form-actions {
   padding: 24px 36px;

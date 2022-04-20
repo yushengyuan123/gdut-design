@@ -1,37 +1,45 @@
 <template>
-  <div class="aside-inner">
-    <div class="menu-top">
-      <div class="menu-download menu-btn">
-        <router-link to="/download">
-          <menu-download />
+  <el-aside width="78px" class="draggable">
+    <div class="aside-inner">
+      <div class="menu-top">
+        <div class="menu-download menu-btn">
+          <router-link to="/download">
+            <mo-icons name='download' />
+          </router-link>
+        </div>
+        <div class="menu-download-list menu-btn" @click="addTask">
+          <mo-icons name='add' />
+        </div>
+      </div>
+      <div class="menu-bottom menu-btn">
+        <router-link to="/settings">
+          <mo-icons name='setting' />
         </router-link>
       </div>
-      <div class="menu-download-list menu-btn" @click="addTask">
-        <add />
-      </div>
     </div>
-    <div class="menu-bottom menu-btn">
-      <router-link to="/settings">
-        <perference />
-      </router-link>
-    </div>
-  </div>
+  </el-aside>
   <AddTaskDialog v-model:showDialog="showAddTaskDialog" />
 </template>
 
-<script setup lang="ts">
-import { ref, defineProps } from "vue";
-import add from "@/components/Icons/add.vue"
-import perference from "@/components/Icons/perference.vue"
-import menuDownload from "@/components/Icons/menu-download.vue"
-import iosSwitch from '@/components/Icons/ios-switch.vue'
+<script lang="ts">
+import { ref, defineComponent } from "vue";
 import AddTaskDialog from "../../components/AddTaskDialog/AddTaskDialog.vue";
 
-const showAddTaskDialog = ref<boolean>(false);
-
-const addTask = () => {
-  showAddTaskDialog.value = true;
-};
+export default defineComponent({
+  components: {
+    AddTaskDialog
+  },
+  setup() {
+    const showAddTaskDialog = ref<boolean>(false);
+    const addTask = () => {
+      showAddTaskDialog.value = true;
+    };
+    return {
+      showAddTaskDialog,
+      addTask
+    }
+  }
+})
 </script>
 
 <style scoped lang="less">
@@ -39,8 +47,8 @@ const addTask = () => {
   display: flex;
   flex-flow: column;
   height: 100%;
-  width: 28px;
-  margin: auto;
+  width: 100%;
+  background-color: #000000db;
 }
 
 .menu-top {
@@ -59,8 +67,9 @@ const addTask = () => {
   justify-content: center;
   height: 28px;
   width: 28px;
-  margin-top: 24px;
+  margin: 24px auto;
   cursor: pointer;
+
 }
 
 .menu-bottom {

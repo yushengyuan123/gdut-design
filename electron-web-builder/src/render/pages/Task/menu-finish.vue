@@ -1,7 +1,7 @@
 <template>
   <el-container>
-    <el-header>
-      <div class="download-header">已完成</div>
+    <el-header class="panel-header">
+      <div class="download-header header-title">已完成</div>
     </el-header>
     <el-main class="panel-content">
       <finish-list />

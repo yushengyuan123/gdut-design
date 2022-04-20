@@ -48,7 +48,7 @@ export default defineComponent({
 
 <style scoped lang="less">
 .task-list-outer {
-  padding: 0 20px;
+  padding: 0 36px;
   box-sizing: border-box;
   margin-top: 30px;
 }

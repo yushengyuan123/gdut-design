@@ -8,7 +8,9 @@ const electron_log_1 = __importDefault(require("electron-log"));
 // @ts-ignore
 const electron_builder_1 = __importDefault(require("../../../../packages/electron-builder"));
 const utils_1 = require("./utils");
-const initTaskRouter = () => {
+const task_1 = require("../database/task");
+const utils_2 = require("../../utils");
+const initTaskRouter = async () => {
     const router = tcpServer_1.default.getRouter();
     electron_log_1.default.warn('register task router');
     router.post('/task/add', async (context) => {
@@ -16,6 +18,8 @@ const initTaskRouter = () => {
         let res = null;
         try {
             await addBuilderTask(taskInfo);
+            const curTime = (0, utils_2.getCurrentDate)();
+            await (0, task_1.addTaskInfo)(null, taskInfo.name, taskInfo.parseUrl, 'https://www.baidu.com', taskInfo.desc, curTime);
             res = (0, utils_1.setResData)(utils_1.Status.Success, utils_1.Message.success, null);
             electron_log_1.default.warn('创建任务成功', res);
         }
@@ -30,7 +34,7 @@ async function addBuilderTask(receiveData) {
     electron_log_1.default.info('execute add task');
     const name = receiveData.name;
     const outputDir = receiveData.outputDir;
-    const url = receiveData.parseDir;
+    const url = receiveData.parseUrl;
     await (0, electron_builder_1.default)({
         parseUrl: url,
         outputDir: outputDir,

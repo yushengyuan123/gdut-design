@@ -1,7 +1,7 @@
 <template>
   <el-container>
-    <el-header>
-      <div class="download-header">下载中</div>
+    <el-header class="panel-header">
+      <div class="download-header header-title">下载中</div>
     </el-header>
     <el-main class="panel-content">
       <task-list />

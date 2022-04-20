@@ -28,7 +28,7 @@ exports.connectMysql = connectMysql;
 function initSqlTemplate(connectInstance, sqlTemplateFunc) {
     for (const key in sqlTemplateFunc) {
         // @ts-ignore
-        connectInstance[key] = sqlTemplateFunc;
+        connectInstance[key] = sqlTemplateFunc[key];
     }
 }
 exports.initSqlTemplate = initSqlTemplate;

@@ -1,18 +1,31 @@
 "use strict";
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.addTaskInfo = void 0;
+exports.removeTask = exports.queryAllTaskInfo = exports.addTaskInfo = void 0;
 const index_1 = require("../../../index");
-function addTaskInfo() {
+const utils_1 = require("../utils");
+async function addTaskInfo(task_id, task_name, task_url, task_icon_url, task_desc, task_create_time) {
     const conInstance = index_1.application.getMysqlConnectObj();
-    const columnValue = ['task_id', 'task_name', 'task_url', 'task_icon_url', 'task_desc', 'task_create_time'];
-    const insertValue = [];
-    columnValue.forEach(colName => {
-        insertValue.push({
+    const columnValueMap = ['task_id', 'task_name', 'task_url', 'task_icon_url', 'task_desc', 'task_create_time'];
+    const valuesArr = [task_id, task_name, task_url, task_icon_url, task_desc, task_create_time];
+    const insertValueMap = [];
+    columnValueMap.forEach((colName, index) => {
+        insertValueMap.push({
             columns: colName,
-            value: '321'
+            value: valuesArr[index]
         });
     });
-    conInstance.insert('task_info', insertValue, []);
+    await conInstance.insert('task_info', insertValueMap);
 }
 exports.addTaskInfo = addTaskInfo;
+async function queryAllTaskInfo() {
+    const conInstance = index_1.application.getMysqlConnectObj();
+    const columns = ['task_id', 'task_name', 'task_url', 'task_icon_url', 'task_desc', 'task_create_time'];
+    const res = await conInstance.select('task_info', columns, null);
+    return res;
+}
+exports.queryAllTaskInfo = queryAllTaskInfo;
+async function removeTask(taskId) {
+    await (0, utils_1.deleteSql)('task_info', `task_id = ${taskId}`);
+}
+exports.removeTask = removeTask;
 //# sourceMappingURL=index.js.map

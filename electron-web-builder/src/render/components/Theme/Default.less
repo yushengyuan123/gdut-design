@@ -1,0 +1,120 @@
+.task-bar-con {
+  background-color: @--app-subnav;
+}
+
+.header-title {
+  color: @--app-title;
+}
+
+.task-status-item {
+  color: @--app-text;
+}
+
+.task-status-item-focus {
+  background-color: @--app-subnav-focus-bg;
+}
+
+.task-info-con {
+  span {
+    color: @--app-text;
+  }
+
+  .time-con {
+    color: @--app-text;
+  }
+}
+
+.task-action-con {
+  border: 1px solid #F5F5F5;
+}
+
+.el-button--primary {
+  color: #eee;
+  background-color: @--color-primary;
+  border-color: @--color-primary;
+  &:hover,
+  &:focus {
+    background: @--color-primary;
+    border-color: @--color-primary;
+    color: #fff;
+  }
+}
+
+.el-button {
+  font-size: 12px;
+  height: 28px;
+}
+
+.add-task-dialog .add-task-dialog-header {
+  border-bottom: 2px solid #e4e7ed;
+}
+
+.add-task-dialog .el-dialog__body {
+  padding-top: 10px;
+  padding-bottom: 10px;
+}
+
+.panel {
+  .panel-header {
+    height: auto;
+    margin: 0 36px;
+    padding: 44px 0 12px;
+    border-bottom: 2px solid @--panel-border-color;
+
+    div {
+      margin: 0;
+      font-size: 16px;
+      font-weight: normal;
+      line-height: 24px;
+    }
+  }
+}
+
+::-webkit-scrollbar {
+  width: 8px;
+  height: 8px;
+}
+
+::-webkit-scrollbar-thumb {
+  border-radius: 8px;
+  background-color: rgba(0, 0, 0, 0.4);
+}
+
+::-webkit-scrollbar-thumb:window-inactive {
+  background-color: rgba(0, 0, 0, 0.25);
+}
+
+::-webkit-scrollbar-corner {
+  background: transparent;
+}
+
+#app,
+#container {
+  height: 100%;
+}
+
+.draggable {
+  -webkit-app-region: drag;
+  user-select: none;
+}
+
+.panel-content {
+  padding: 0;
+  height: 100%;
+}
+
+@media only screen and (max-width:567px) {
+  .hidden-xs-only {
+    display:none !important
+  }
+  .hidden-sm-only {
+    display: none !important;
+  }
+}
+
+@media only screen and (min-width: 568px) and (max-width: 991px) {
+  .hidden-xs-only {
+    display:none !important
+  }
+}
+

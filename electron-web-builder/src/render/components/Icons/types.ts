@@ -3,6 +3,20 @@ enum StrokeColor  {
   defaultColor = "#303133"
 }
 
+type iconsNameKey = 'switch'
+  | 'file'
+  | 'careRight'
+  | 'link'
+  | 'checkSuccess'
+  | 'close'
+  | 'task-details'
+  | 'setting'
+  | 'add'
+  | 'download'
+  | 'infoFilled'
+  
+
 export {
-  StrokeColor
+  StrokeColor,
+  iconsNameKey
 }

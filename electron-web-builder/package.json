@@ -25,16 +25,23 @@
   "author": "",
   "license": "ISC",
   "dependencies": {
+    "@element-plus/icons-vue": "^1.1.4",
     "axios": "^0.26.1",
+    "cheerio": "^1.0.0-rc.10",
+    "dayjs": "^1.11.0",
     "electron-is": "^3.0.0",
     "electron-log": "^4.4.6",
     "element-plus": "^2.1.7",
+    "eos-icons-vue3": "^1.1.0",
     "koa": "^2.13.4",
     "koa-bodyparser": "^4.3.0",
     "koa-router": "^10.1.1",
     "mysql": "^2.18.1",
     "pinia": "^2.0.13",
+    "puppeteer": "^13.5.2",
+    "request": "^2.88.2",
     "vue": "^3.2.31",
+    "vue-awesome": "^4.5.0",
     "vue-router": "4"
   }
 }

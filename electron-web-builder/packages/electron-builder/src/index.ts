@@ -1,6 +1,7 @@
 import * as path from "path"
 import {prepareElectronApp} from "./build/prepareElectronApp"
 import { packager } from "../../electron-packager"
+import { buildNativefierApp } from 'nativefier'
 
 async function buildElectronApp(rawsOptions: ElectronBuilder.parseOptions) {
   const templatePath = path.join(__dirname, '../', './template')
@@ -28,6 +29,11 @@ async function buildElectronApp(rawsOptions: ElectronBuilder.parseOptions) {
   
   await prepareElectronApp(templatePath, destinationPath, rawsOptions)
   await packager(packagerOptions)
+  // await buildNativefierApp({
+  //   targetUrl: rawsOptions.parseUrl,
+  //   out: rawsOptions.outputDir,
+  //   name: rawsOptions.appName
+  // })
   
   console.log("complete")
 }

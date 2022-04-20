@@ -14,23 +14,33 @@ type taskTableColumn =
 type insertFunc = (
   tableName: string,
   colValues: ColValues[],
-  where: string
 ) => void
 
-type selectFunc = (
+type selectFunc<R = any, T extends R[] = R[]> = (
+  tableName: string,
+  columns: T,
+  where: string | null
+) => Promise<any[]>
 
+type deleteFunc = (
+  tableName: string,
+  where: string
 ) => void
 
 interface connInstance {
   insert: insertFunc,
   select: selectFunc,
-  connect: Function
+  delete: deleteFunc,
+  connect: Function,
+  query: Function,
+  end: Function
 }
 
 export {
   connInstance,
   insertFunc,
   selectFunc,
+  deleteFunc,
   taskTableColumn,
   ColValues
 }

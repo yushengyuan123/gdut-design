@@ -1,6 +1,7 @@
 import {commandSorts} from "./commandTypes"
 import {
-  addBuilderTask
+  openSysDefaultBrowser,
+  openFinderFolder
 } from "./actions"
 
 export interface builderCommand {
@@ -10,7 +11,11 @@ export interface builderCommand {
 
 export const builderCommandLists: Array<builderCommand> = [
   {
-    command: commandSorts.AddTask,
-    action: addBuilderTask
-  }
+    command: commandSorts.systemOpenDefaultBrowser,
+    action: openSysDefaultBrowser
+  },
+  {
+    command: commandSorts.systemOpenFinderFolder,
+    action: openFinderFolder
+  },
 ]

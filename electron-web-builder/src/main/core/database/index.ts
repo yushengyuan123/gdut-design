@@ -36,7 +36,7 @@ function initSqlTemplate<R extends Object, Tpl extends Object>(
 ) {
   for (const key in sqlTemplateFunc) {
     // @ts-ignore
-    connectInstance[key] = sqlTemplateFunc
+    connectInstance[key] = sqlTemplateFunc[key]
   }
 }
 

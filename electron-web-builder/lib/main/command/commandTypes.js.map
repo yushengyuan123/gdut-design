@@ -1,1 +1,1 @@
-{"version":3,"file":"commandTypes.js","sourceRoot":"","sources":["../../../src/main/command/commandTypes.ts"],"names":[],"mappings":";;;AAAA,IAAK,YAEJ;AAFD,WAAK,YAAY;IACf,yCAAyB,CAAA;AAC3B,CAAC,EAFI,YAAY,KAAZ,YAAY,QAEhB;AAGC,oCAAY"}
+{"version":3,"file":"commandTypes.js","sourceRoot":"","sources":["../../../src/main/command/commandTypes.ts"],"names":[],"mappings":";;;AAAA,IAAK,YAGJ;AAHD,WAAK,YAAY;IACf,gEAAgD,CAAA;IAChD,6DAA6C,CAAA;AAC/C,CAAC,EAHI,YAAY,KAAZ,YAAY,QAGhB;AAGC,oCAAY"}

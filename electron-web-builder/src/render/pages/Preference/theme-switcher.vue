@@ -14,12 +14,14 @@
 
 <script lang="ts">
 import { defineComponent, ref } from "vue"
+import { usePreferenceStore, THEME_COLOR_VALUE } from "../../pinia/preference";
 
 interface themeClassName {
   'theme-item-auto': string,
   'theme-item-light': string,
   'theme-item-dark': string
 }
+
 interface themeOptions {
   text: string,
   className: keyof themeClassName,
@@ -42,10 +44,13 @@ export default defineComponent({
         text: '深色'
       }
     ])
+    const preferenceStore = usePreferenceStore()
+    const themeColor = preferenceStore.appThemeColor
 
-    const currentValue = ref<number>(1)
+    const currentValue = ref<THEME_COLOR_VALUE>(themeColor)
     const changeColor = (index) => {
       currentValue.value = index
+      preferenceStore.updateAppThemeColor(index)
     }
 
     return {
@@ -73,7 +78,6 @@ export default defineComponent({
     span {
       font-size: 13px;
       line-height: 20px;
-      color: #606266;
     }
 
     &.active {

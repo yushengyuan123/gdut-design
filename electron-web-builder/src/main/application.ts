@@ -6,6 +6,7 @@ import appServer from "./core/tcpServer"
 import logger from 'electron-log'
 import {registerKoaApiRouter} from "./core/apiRouter"
 import { connectMysql } from "./core/database"
+import is from 'electron-is'
 import {
   connInstance
 } from "./core/database/types"
@@ -13,6 +14,8 @@ import {
 const bodyParser = require('koa-bodyparser')
 
 const debuggerServerAddr = 'http://localhost:3000/'
+
+process.env['ELECTRON_DISABLE_SECURITY_WARNINGS'] = 'true'
 
 
 class Application extends EventEmitter {
@@ -84,14 +87,14 @@ class Application extends EventEmitter {
   
   createWindow () {
     const win = new BrowserWindow({
-      width: 1200,
-      height: 600,
+      width: 838,
+      height: 768,
       webPreferences: {
         preload: path.join(__dirname, 'renderPreload.js'),
         contextIsolation: false,
         webSecurity: false
       },
-      titleBarStyle: 'hidden'
+      titleBarStyle: 'hiddenInset',
     })
     
     this.singletonBrowser = win

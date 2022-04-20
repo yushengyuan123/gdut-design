@@ -1,28 +1,16 @@
-import logger from 'electron-log'
 import {
-  taskAddOptions
-} from "../../common/types"
-// @ts-ignore
-import buildElectronApp from "../../../packages/electron-builder"
+  shell
+} from 'electron'
 
-async function addBuilderTask(
-  receiveData: taskAddOptions
-) {
-  logger.info('execute add task')
-  
-  const name = receiveData.name
-  const outputDir = receiveData.outputDir
-  const url = receiveData.parseDir
-  
-  await buildElectronApp({
-    parseUrl: url,
-    outputDir: outputDir,
-    appName: name
-  })
-  
-  logger.info('add task finish')
+function openSysDefaultBrowser(url: string) {
+  shell.openExternal(url)
+}
+
+function openFinderFolder(filePath: string) {
+  shell.showItemInFolder(filePath)
 }
 
 export {
-  addBuilderTask
+  openSysDefaultBrowser,
+  openFinderFolder
 }

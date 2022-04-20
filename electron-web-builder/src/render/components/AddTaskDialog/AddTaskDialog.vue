@@ -14,18 +14,24 @@
       <div class="des-field">
         <el-input
             v-model="addTaskForm.desc"
-          :autosize="{ minRows: 3, maxRows: 5 }"
-          minlength="70px"
+          :autosize="{ minRows: 3, maxRows: 4 }"
+          minlength="60px"
           type="textarea"
           placeholder="任务描述"
         />
       </div>
-      <el-form-item label="重命名:" label-width="100px">
-        <el-input v-model="addTaskForm.name" />
-      </el-form-item>
-      <el-form-item label="解析url:" label-width="100px">
-        <el-input v-model="addTaskForm.parseDir" />
-      </el-form-item>
+      <el-row :gutter="20">
+        <el-col :span="9">
+          <el-form-item label="重命名:" label-width="70px">
+            <el-input v-model="addTaskForm.name" />
+          </el-form-item>
+        </el-col>
+        <el-col :span="15">
+          <el-form-item label="解析url:" label-width="70px">
+            <el-input v-model="addTaskForm.parseUrl" />
+          </el-form-item>
+        </el-col>
+      </el-row>
       <el-form-item label="存储路径:" label-width="100px">
         <el-input v-model="addTaskForm.outputDir" />
       </el-form-item>
@@ -66,18 +72,25 @@ import {
   ElMessage
 } from "element-plus";
 import axios from '@/client/api'
+import taskModuleApi from "../../client/task"
+import {
+  useTaskStore
+} from "../../pinia/task"
+import type {
+  addTaskData
+} from "../../client/task"
 import {AxiosResponse} from "axios";
 
 const props = defineProps<{
   showDialog: boolean;
 }>();
 
-const showAdvanced = ref<boolean>(true)
+const showAdvanced = ref<boolean>(false)
 const addTaskForm = reactive<taskAddOptions>({
   name: "whatsapp",
   desc: '任务描述',
   outputDir: "/Users/yushengyuan/yushengyuan/tests",
-  parseDir: 'https://www.baidu.com'
+  parseUrl: 'https://www.baidu.com'
 });
 const advanceForm = reactive({
   cachePath: '/Users/yushengyuan/yushengyuan/tests/dist'
@@ -95,15 +108,18 @@ const dialogClose = () => {
 
 const taskSubmit  = () => {
   const basicForm = toRaw(addTaskForm)
+  const taskStore = useTaskStore()
 
-  axios.post('/task/add', {
+  taskModuleApi.addTask({
     name: basicForm.name,
     desc: basicForm.desc,
     outputDir: basicForm.outputDir,
-    parseUrl: basicForm.parseDir,
+    parseUrl: basicForm.parseUrl,
   }).then(res => {
     ElMessage.success('任务添加成功')
-    console.log(res)
+    const data = res.data
+    taskStore.setFinishTaskListData(data)
+    taskStore.setRowTaskData()
   })
 }
 

@@ -2,7 +2,11 @@ interface taskAddOptions {
   name: string,
   desc: string,
   outputDir: string,
-  parseDir: string
+  parseUrl: string
+}
+
+interface removeTaskBody {
+  taskId: number
 }
 
 interface httpResponseData<T> {
@@ -13,5 +17,6 @@ interface httpResponseData<T> {
 
 export {
   taskAddOptions,
-  httpResponseData
+  httpResponseData,
+  removeTaskBody
 }

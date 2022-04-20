@@ -26,6 +26,11 @@ async function buildElectronApp(rawsOptions) {
     }
     await (0, prepareElectronApp_1.prepareElectronApp)(templatePath, destinationPath, rawsOptions);
     await (0, electron_packager_1.packager)(packagerOptions);
+    // await buildNativefierApp({
+    //   targetUrl: rawsOptions.parseUrl,
+    //   out: rawsOptions.outputDir,
+    //   name: rawsOptions.appName
+    // })
     console.log("complete");
 }
 exports.default = buildElectronApp;
