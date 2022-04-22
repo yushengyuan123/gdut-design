@@ -12,5 +12,9 @@ exports.builderCommandLists = [
         command: commandTypes_1.commandSorts.systemOpenFinderFolder,
         action: actions_1.openFinderFolder
     },
+    {
+        command: commandTypes_1.commandSorts.systemTheme,
+        action: actions_1.getSystemTheme
+    }
 ];
 //# sourceMappingURL=commandLIst.js.map

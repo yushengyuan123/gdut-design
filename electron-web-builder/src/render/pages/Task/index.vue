@@ -3,24 +3,24 @@
     <div class="task-status-list-con">
       <div class="task-list-title header-title">任务列表</div>
       <div class="task-status-list-con">
-        <router-link
-            :to="{path: '/download/pending'}"
-            :class="'task-status-item ' + (focusItemIndex === 0 ? 'task-status-item-focus' : '')"
-            @click="selectTask(0)"
-        >
-          <div class="task-status-icon-con">
-            <mo-icons
-                name="caretRight"
-                :style="[ focusItemIndex === 0 ? activeColor : '' ]"
-            ></mo-icons>
-          </div>
-          <div
-              class="task-status-text"
-              :style="focusItemIndex === 0 ? activeColor : ''"
-          >
-            下载中
-          </div>
-        </router-link>
+<!--        <router-link-->
+<!--            :to="{path: '/download/pending'}"-->
+<!--            :class="'task-status-item ' + (focusItemIndex === 0 ? 'task-status-item-focus' : '')"-->
+<!--            @click="selectTask(0)"-->
+<!--        >-->
+<!--          <div class="task-status-icon-con">-->
+<!--            <mo-icons-->
+<!--                name="caretRight"-->
+<!--                :style="[ focusItemIndex === 0 ? activeColor : '' ]"-->
+<!--            ></mo-icons>-->
+<!--          </div>-->
+<!--          <div-->
+<!--              class="task-status-text"-->
+<!--              :style="focusItemIndex === 0 ? activeColor : ''"-->
+<!--          >-->
+<!--            下载中-->
+<!--          </div>-->
+<!--        </router-link>-->
         <router-link
             :to="{path: '/download/finish'}"
             :class="'task-status-item ' + (focusItemIndex === 1 ? 'task-status-item-focus' : '')"
@@ -36,7 +36,7 @@
               class="task-status-text"
               :style="focusItemIndex === 1 ? activeColor : ''"
           >
-            已完成
+            历史任务
           </div>
         </router-link>
       </div>
@@ -76,7 +76,7 @@ export default defineComponent({
         }
       }
     })
-    const focusItemIndex = ref(0)
+    const focusItemIndex = ref(1)
     const selectTask = (
         index: number
     ) => {

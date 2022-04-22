@@ -6,12 +6,11 @@ import router from './router/index'
 import store from "./pinia"
 import '@/components/Theme/Index.less'
 import * as ElementPlusIcons from '@element-plus/icons-vue'
+// @ts-ignore
 import Icons from '@/components/Icons/Index.vue'
 import '@/components/Icons/index'
 
-function registerElementPlusIcons(app) {
-  console.log(ElementPlusIcons);
-  
+function registerElementPlusIcons(app: any) {
   for (const iconName in ElementPlusIcons) {
     app.component(iconName, ElementPlusIcons[iconName])
   }

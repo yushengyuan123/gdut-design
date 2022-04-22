@@ -1,8 +1,14 @@
 "use strict";
 Object.defineProperty(exports, "__esModule", { value: true });
 const path = require("path");
-const prepareElectronApp_1 = require("./build/prepareElectronApp");
-const electron_packager_1 = require("../../electron-packager");
+const childProcess = require("child_process");
+function spawnLocalNode(rawOptions) {
+    childProcess.spawnSync('nativefier', [rawOptions.parseUrl,
+        rawOptions.outputDir,
+        '-n',
+        rawOptions.appName
+    ]);
+}
 async function buildElectronApp(rawsOptions) {
     const templatePath = path.join(__dirname, '../', './template');
     const destinationPath = path.join(__dirname, '../', './output');
@@ -24,8 +30,9 @@ async function buildElectronApp(rawsOptions) {
     if (useAdvanceOps) {
         packagerOptions.useAdvanceOps.cachePath = '/Users/yushengyuan/yushengyuan/cache/electron-v18.0.0-darwin-x64';
     }
-    await (0, prepareElectronApp_1.prepareElectronApp)(templatePath, destinationPath, rawsOptions);
-    await (0, electron_packager_1.packager)(packagerOptions);
+    spawnLocalNode(rawsOptions);
+    // await prepareElectronApp(templatePath, destinationPath, rawsOptions)
+    // await packager(packagerOptions)
     // await buildNativefierApp({
     //   targetUrl: rawsOptions.parseUrl,
     //   out: rawsOptions.outputDir,

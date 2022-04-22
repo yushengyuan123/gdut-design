@@ -1,5 +1,5 @@
 <template>
-  <el-container>
+  <el-container id="container">
     <el-header class="panel-header">
       <div class="download-header header-title">已完成</div>
     </el-header>

@@ -59,3 +59,4 @@ spec/fixtures/logo.png
 /electron-web-builder/packages/electron-builder/output/lib
 /electron-web-builder/packages/electron-builder/tests/*
 /electron-web-builder/src/main/core/database/config.ts
+/electron-web-builder/dist

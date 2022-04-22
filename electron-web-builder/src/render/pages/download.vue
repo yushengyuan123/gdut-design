@@ -1,12 +1,12 @@
 <template>
   <el-container id="container">
-    <el-aside width="200px">
-      <div class="task-bar-con hidden-sm-only">
+    <el-aside width="200px" class="hidden-subnav-only">
+      <div class="task-bar-con">
         <task-bar></task-bar>
       </div>
     </el-aside>
     <el-main class="panel-content">
-      <div class="panel">
+      <div class="panel task-content">
         <router-view />
       </div>
     </el-main>
@@ -29,7 +29,7 @@ export default defineComponent({
 .task-bar-con {
   height: 100%;
 }
-.panel {
+.task-content {
   height: 100%;
 }
 </style>

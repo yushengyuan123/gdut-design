@@ -16,10 +16,7 @@
             />
           </div>
           <div class="task-icon-con">
-            <img
-                class="task-icon"
-                :src="item.iconUrl"
-            >
+            <img class="task-icon" :src="item.iconUrl" />
           </div>
           <div class="task-info-con">
             <span>{{ item.taskName }}</span>
@@ -131,6 +128,22 @@ export default defineComponent({
 
   .time-con {
     margin-top: 10px;
+    font-size: 14px;
+  }
+}
+
+.no-task {
+  display: flex;
+  height: 100%;
+  width: 100%;
+  align-items: center;
+  justify-content: center;
+  text-align: center;
+
+  .no-task-inner {
+    width: 100%;
+    background: transparent url('@/asserts/no-task.svg') top center no-repeat;
+    padding-top: 360px;
     font-size: 14px;
   }
 }

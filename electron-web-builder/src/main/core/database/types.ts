@@ -9,6 +9,7 @@ type taskTableColumn =
   'task_url' |
   'task_icon_url' |
   'task_desc' |
+  'task_status' |
   'task_create_time'
 
 type insertFunc = (

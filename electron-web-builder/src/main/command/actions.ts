@@ -1,16 +1,26 @@
 import {
-  shell
+  shell,
+  nativeTheme,
+  dialog
 } from 'electron'
 
 function openSysDefaultBrowser(url: string) {
   shell.openExternal(url)
 }
 
-function openFinderFolder(filePath: string) {
-  shell.showItemInFolder(filePath)
+async function openFinderFolder(filePath: string) {
+  const res = await shell.openPath(filePath)
+  if (res) {
+    dialog.showErrorBox('发生错误', res)
+  }
+}
+
+function getSystemTheme() {
+  return  nativeTheme.shouldUseDarkColors
 }
 
 export {
   openSysDefaultBrowser,
-  openFinderFolder
+  openFinderFolder,
+  getSystemTheme
 }

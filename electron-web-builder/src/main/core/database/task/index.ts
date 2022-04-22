@@ -16,10 +16,14 @@ async function addTaskInfo(
   task_desc: string,
   task_create_time: string
 ) {
+  if (!task_desc.trim()) {
+    task_desc = `${task_name}桌面端应用`
+  }
+  
   const conInstance = application.getMysqlConnectObj()
   const columnValueMap: taskTableColumn[]
-    = ['task_id', 'task_name', 'task_url', 'task_icon_url', 'task_desc', 'task_create_time']
-  const valuesArr = [task_id, task_name, task_url, task_icon_url, task_desc, task_create_time]
+    = ['task_id', 'task_name', 'task_url', 'task_icon_url', 'task_desc', "task_status",'task_create_time']
+  const valuesArr = [task_id, task_name, task_url, task_icon_url, task_desc, 1, task_create_time]
   const insertValueMap: ColValues<taskTableColumn>[] = []
   
   columnValueMap.forEach((colName, index) => {

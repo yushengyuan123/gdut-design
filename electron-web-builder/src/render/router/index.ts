@@ -14,7 +14,7 @@ const routes: RouteRecordRaw[] = [
     path: '/download',
     component: download,
     name: 'download',
-    redirect: '/download/pending',
+    redirect: '/download/finish',
     children: [
       {
         path: 'pending',

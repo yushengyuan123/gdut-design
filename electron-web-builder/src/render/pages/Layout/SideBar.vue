@@ -1,5 +1,5 @@
 <template>
-  <el-aside width="78px" class="draggable">
+  <el-aside width="78px" class="draggable hidden-menu-only">
     <div class="aside-inner">
       <div class="menu-top">
         <div class="menu-download menu-btn">
@@ -18,7 +18,7 @@
       </div>
     </div>
   </el-aside>
-  <AddTaskDialog v-model:showDialog="showAddTaskDialog" />
+  <add-task-dialog v-model:visible="visible" v-if="visible"/>
 </template>
 
 <script lang="ts">
@@ -27,15 +27,16 @@ import AddTaskDialog from "../../components/AddTaskDialog/AddTaskDialog.vue";
 
 export default defineComponent({
   components: {
-    AddTaskDialog
+    AddTaskDialog,
+    [AddTaskDialog.name]: AddTaskDialog
   },
   setup() {
-    const showAddTaskDialog = ref<boolean>(false);
+    const visible = ref<boolean>(false);
     const addTask = () => {
-      showAddTaskDialog.value = true;
+      visible.value = true;
     };
     return {
-      showAddTaskDialog,
+      visible,
       addTask
     }
   }

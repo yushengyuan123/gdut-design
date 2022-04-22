@@ -10,6 +10,10 @@
   color: @--app-text;
 }
 
+.no-task-inner {
+  color: #555;
+}
+
 .task-status-item-focus {
   background-color: @--app-subnav-focus-bg;
 }
@@ -88,6 +92,18 @@
   background: transparent;
 }
 
+html,
+body {
+  height: 100%;
+  margin: 0;
+  padding: 0;
+  border: 0;
+}
+
+a {
+  text-decoration: none;
+}
+
 #app,
 #container {
   height: 100%;
@@ -103,17 +119,17 @@
   height: 100%;
 }
 
-@media only screen and (max-width:567px) {
-  .hidden-xs-only {
+@media only screen and (max-width:650px) {
+  .hidden-menu-only {
     display:none !important
   }
-  .hidden-sm-only {
+  .hidden-subnav-only {
     display: none !important;
   }
 }
 
-@media only screen and (min-width: 568px) and (max-width: 991px) {
-  .hidden-xs-only {
+@media only screen and (min-width: 651px) and (max-width: 800px) {
+  .hidden-menu-only {
     display:none !important
   }
 }

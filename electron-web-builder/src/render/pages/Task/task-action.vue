@@ -86,7 +86,7 @@ export default defineComponent({
     const formLabelWidth = ref('25%')
 
     const openLocationFolder = () => {
-      const filePath = `/Users/yushengyuan/yushengyuan/tests/${taskInfo.taskName}-electron`
+      const filePath = `/Users/yushengyuan/yushengyuan/tests/${taskInfo.taskName}-darwin-arm64`
       electronApi.ipcRenderer.send('command', 'system:open-finder', filePath)
     }
 

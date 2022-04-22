@@ -1,6 +1,6 @@
 <template>
   <el-container id="container">
-    <el-aside width="200px">
+    <el-aside width="200px" class="hidden-subnav-only">
       <preference-menu />
     </el-aside>
     <el-main class="panel-content">

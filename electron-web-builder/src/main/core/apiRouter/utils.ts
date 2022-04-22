@@ -5,7 +5,7 @@ enum Status {
 
 enum Message {
   success = 'success',
-  error = '未知错误'
+  error = '发生未知错误，请稍后再试。'
 }
 
 function setResData<R = any>(

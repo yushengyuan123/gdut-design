@@ -4,7 +4,14 @@ import { defineConfig } from "vite"
 const path = require('path')
 
 export default defineConfig({
-  // base: path.resolve(__dirname, './dist'),
+  base: './',
+  build: {
+    rollupOptions: {
+      output: {
+        dir: path.join(__dirname, 'lib/main/dist')
+      }
+    }
+  },
   plugins: [
     vue(),
     VueJsx()

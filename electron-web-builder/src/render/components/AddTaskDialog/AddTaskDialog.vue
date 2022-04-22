@@ -1,128 +1,98 @@
 <template>
   <el-dialog
-    v-model="props.showDialog"
-    width="64vw"
-    custom-class="tab-title-dialog add-task-dialog"
-    :destroy-on-close="true"
-    :append-to-body="true"
-    :center="true"
-    @open="dialogOpen"
-    @close="dialogClose"
+      v-model="visible"
+      width="64vw"
+      custom-class="tab-title-dialog add-task-dialog"
+      :append-to-body="true"
+      :center="true"
+      @open="dialogOpen"
+      @close="dialogClose"
   >
     <div class="add-task-dialog-header">添加任务</div>
-    <el-form :model="addTaskForm" label-width="120px" label-position="left">
+    <el-form :model="baseFormData" label-width="120px" label-position="left">
       <div class="des-field">
         <el-input
-            v-model="addTaskForm.desc"
-          :autosize="{ minRows: 3, maxRows: 4 }"
-          minlength="60px"
-          type="textarea"
-          placeholder="任务描述"
+            v-model="baseFormData.desc"
+            :autosize="{ minRows: 3, maxRows: 4 }"
+            minlength="60px"
+            type="textarea"
+            placeholder="任务描述"
         />
       </div>
       <el-row :gutter="20">
         <el-col :span="9">
           <el-form-item label="重命名:" label-width="70px">
-            <el-input v-model="addTaskForm.name" />
+            <el-input v-model="baseFormData.name"/>
           </el-form-item>
         </el-col>
         <el-col :span="15">
           <el-form-item label="解析url:" label-width="70px">
-            <el-input v-model="addTaskForm.parseUrl" />
+            <el-input v-model="baseFormData.parseUrl"/>
           </el-form-item>
         </el-col>
       </el-row>
       <el-form-item label="存储路径:" label-width="100px">
-        <el-input v-model="addTaskForm.outputDir" />
+        <el-input v-model="baseFormData.outputDir"/>
       </el-form-item>
     </el-form>
-    <div v-if="showAdvanced">
-      <el-form :model="advanceForm" label-width="120px" label-position="left">
+    <div v-if="advanceVisible">
+      <el-form :model="advanceFormData" label-width="120px" label-position="left">
         <el-form-item label="缓存路径:" label-width="100px">
-          <el-input v-model="advanceForm.cachePath" />
+          <el-input v-model="advanceFormData.cachePath"/>
         </el-form-item>
       </el-form>
     </div>
     <template #footer>
       <div class="dialog-footer">
-        <el-checkbox v-model="showAdvanced" label="高级选项" class="chk"/>
+        <el-checkbox v-model="advanceVisible" label="高级选项" class="chk"/>
         <el-button @click="dialogClose">取消</el-button>
         <el-button
             type="primary"
             @click="taskSubmit"
             color="#5b5bfa"
-          >提交</el-button
+        >提交
+        </el-button
         >
       </div>
     </template>
   </el-dialog>
 </template>
 
-<script setup lang="ts">
+<script lang="ts">
 import {
-  defineProps,
-  defineEmits,
-  reactive,
-  toRaw, ref
+  ref, defineComponent, toRef, SetupContext, onMounted
 } from "vue";
-import {
-  taskAddOptions
-} from "../../../common/types";
-import {
-  ElMessage
-} from "element-plus";
-import axios from '@/client/api'
-import taskModuleApi from "../../client/task"
-import {
-  useTaskStore
-} from "../../pinia/task"
-import type {
-  addTaskData
-} from "../../client/task"
-import {AxiosResponse} from "axios";
+import useTaskForm from "./hooks"
 
-const props = defineProps<{
-  showDialog: boolean;
-}>();
+export default defineComponent({
+  name: 'add-task-dialog',
+  props: {
+    visible: {
+      type: Boolean
+    }
+  },
+  setup(props, context) {
+    const {
+      baseFormData,
+      advanceFormData,
+      visible,
+      dialogOpen,
+      dialogClose,
+      taskSubmit
+    } = useTaskForm(props, context)
+    const advanceVisible = ref<boolean>(false)
 
-const showAdvanced = ref<boolean>(false)
-const addTaskForm = reactive<taskAddOptions>({
-  name: "whatsapp",
-  desc: '任务描述',
-  outputDir: "/Users/yushengyuan/yushengyuan/tests",
-  parseUrl: 'https://www.baidu.com'
-});
-const advanceForm = reactive({
-  cachePath: '/Users/yushengyuan/yushengyuan/tests/dist'
+    return {
+      advanceVisible,
+      baseFormData,
+      advanceFormData,
+      visible,
+      dialogClose,
+      dialogOpen,
+      taskSubmit
+    }
+  }
 })
-
-const emitEvents = defineEmits<{
-  (e: "update:showDialog", status: boolean): void;
-}>();
-const dialogOpen = () => {
-  emitEvents("update:showDialog", true);
-};
-const dialogClose = () => {
-  emitEvents("update:showDialog", false);
-};
-
-const taskSubmit  = () => {
-  const basicForm = toRaw(addTaskForm)
-  const taskStore = useTaskStore()
-
-  taskModuleApi.addTask({
-    name: basicForm.name,
-    desc: basicForm.desc,
-    outputDir: basicForm.outputDir,
-    parseUrl: basicForm.parseUrl,
-  }).then(res => {
-    ElMessage.success('任务添加成功')
-    const data = res.data
-    taskStore.setFinishTaskListData(data)
-    taskStore.setRowTaskData()
-  })
-}
-
 </script>
 
 <style scoped lang="less">
@@ -166,10 +136,12 @@ const taskSubmit  = () => {
   .chk {
     float: left;
     line-height: 28px;
+
     &.el-checkbox {
       & .el-checkbox__input {
         line-height: 19px;
       }
+
       & .el-checkbox__label {
         padding-left: 6px;
       }

@@ -1,7 +1,8 @@
 import {commandSorts} from "./commandTypes"
 import {
-  openSysDefaultBrowser,
-  openFinderFolder
+  getSystemTheme,
+  openFinderFolder,
+  openSysDefaultBrowser
 } from "./actions"
 
 export interface builderCommand {
@@ -18,4 +19,8 @@ export const builderCommandLists: Array<builderCommand> = [
     command: commandSorts.systemOpenFinderFolder,
     action: openFinderFolder
   },
+  {
+    command: commandSorts.systemTheme,
+    action: getSystemTheme
+  }
 ]

@@ -10,6 +10,7 @@ const command_1 = require("./command");
 const tcpServer_1 = __importDefault(require("./core/tcpServer"));
 const apiRouter_1 = require("./core/apiRouter");
 const database_1 = require("./core/database");
+const electron_is_1 = __importDefault(require("electron-is"));
 const bodyParser = require('koa-bodyparser');
 const debuggerServerAddr = 'http://localhost:3000/';
 process.env['ELECTRON_DISABLE_SECURITY_WARNINGS'] = 'true';
@@ -69,18 +70,20 @@ class Application extends events_1.EventEmitter {
             webPreferences: {
                 preload: path_1.default.join(__dirname, 'renderPreload.js'),
                 contextIsolation: false,
-                webSecurity: false
+                webSecurity: !electron_is_1.default.dev()
             },
             titleBarStyle: 'hiddenInset',
         });
         this.singletonBrowser = win;
-        if (process.env.CUR_MODE == 'debug') {
+        if (electron_is_1.default.dev()) {
             win.loadURL(debuggerServerAddr);
         }
         else {
-            win.loadFile('index.html');
+            win.loadFile(path_1.default.join(__dirname, './dist/index.html'));
         }
-        win.webContents.openDevTools();
+        if (electron_is_1.default.dev()) {
+            win.webContents.openDevTools();
+        }
     }
     hiddenTopMenu() {
         electron_1.Menu.setApplicationMenu(null);

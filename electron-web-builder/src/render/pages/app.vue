@@ -12,6 +12,7 @@ import SideBar from "./Layout/SideBar.vue"
 import {THEME_COLOR_VALUE, usePreferenceStore} from "@/pinia/preference";
 import titleDragBar from "./Layout/titleDragBar.vue"
 
+
 export default defineComponent({
   components: {
     'side-bar': SideBar,

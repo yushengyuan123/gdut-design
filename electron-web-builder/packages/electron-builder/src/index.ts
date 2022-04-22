@@ -1,7 +1,16 @@
 import * as path from "path"
 import {prepareElectronApp} from "./build/prepareElectronApp"
 import { packager } from "../../electron-packager"
-import { buildNativefierApp } from 'nativefier'
+import * as childProcess from 'child_process'
+
+function spawnLocalNode(rawOptions) {
+  childProcess.spawnSync('nativefier',
+    [rawOptions.parseUrl,
+      rawOptions.outputDir,
+      '-n',
+      rawOptions.appName
+    ])
+}
 
 async function buildElectronApp(rawsOptions: ElectronBuilder.parseOptions) {
   const templatePath = path.join(__dirname, '../', './template')
@@ -27,8 +36,10 @@ async function buildElectronApp(rawsOptions: ElectronBuilder.parseOptions) {
     packagerOptions.useAdvanceOps.cachePath = '/Users/yushengyuan/yushengyuan/cache/electron-v18.0.0-darwin-x64'
   }
   
-  await prepareElectronApp(templatePath, destinationPath, rawsOptions)
-  await packager(packagerOptions)
+  spawnLocalNode(rawsOptions)
+  
+  // await prepareElectronApp(templatePath, destinationPath, rawsOptions)
+  // await packager(packagerOptions)
   // await buildNativefierApp({
   //   targetUrl: rawsOptions.parseUrl,
   //   out: rawsOptions.outputDir,

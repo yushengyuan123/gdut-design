@@ -4,9 +4,12 @@ exports.removeTask = exports.queryAllTaskInfo = exports.addTaskInfo = void 0;
 const index_1 = require("../../../index");
 const utils_1 = require("../utils");
 async function addTaskInfo(task_id, task_name, task_url, task_icon_url, task_desc, task_create_time) {
+    if (!task_desc.trim()) {
+        task_desc = `${task_name}桌面端应用`;
+    }
     const conInstance = index_1.application.getMysqlConnectObj();
-    const columnValueMap = ['task_id', 'task_name', 'task_url', 'task_icon_url', 'task_desc', 'task_create_time'];
-    const valuesArr = [task_id, task_name, task_url, task_icon_url, task_desc, task_create_time];
+    const columnValueMap = ['task_id', 'task_name', 'task_url', 'task_icon_url', 'task_desc', "task_status", 'task_create_time'];
+    const valuesArr = [task_id, task_name, task_url, task_icon_url, task_desc, 1, task_create_time];
     const insertValueMap = [];
     columnValueMap.forEach((colName, index) => {
         insertValueMap.push({

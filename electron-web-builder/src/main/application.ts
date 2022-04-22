@@ -17,7 +17,6 @@ const debuggerServerAddr = 'http://localhost:3000/'
 
 process.env['ELECTRON_DISABLE_SECURITY_WARNINGS'] = 'true'
 
-
 class Application extends EventEmitter {
   private singletonBrowser: BrowserWindow | undefined
   private appServer: any
@@ -92,20 +91,22 @@ class Application extends EventEmitter {
       webPreferences: {
         preload: path.join(__dirname, 'renderPreload.js'),
         contextIsolation: false,
-        webSecurity: false
+        webSecurity: !is.dev()
       },
       titleBarStyle: 'hiddenInset',
     })
     
     this.singletonBrowser = win
     
-    if (process.env.CUR_MODE == 'debug') {
+    if (is.dev()) {
       win.loadURL(debuggerServerAddr)
     } else {
-      win.loadFile('index.html')
+      win.loadFile(path.join(__dirname, './dist/index.html'))
     }
     
-    win.webContents.openDevTools()
+    if (is.dev()) {
+      win.webContents.openDevTools()
+    }
   }
   
   hiddenTopMenu() {

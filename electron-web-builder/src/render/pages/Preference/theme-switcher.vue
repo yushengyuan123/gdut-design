@@ -13,7 +13,7 @@
 </template>
 
 <script lang="ts">
-import { defineComponent, ref } from "vue"
+import {computed, defineComponent, ref} from "vue"
 import { usePreferenceStore, THEME_COLOR_VALUE } from "../../pinia/preference";
 
 interface themeClassName {
@@ -45,11 +45,10 @@ export default defineComponent({
       }
     ])
     const preferenceStore = usePreferenceStore()
-    const themeColor = preferenceStore.appThemeColor
-
-    const currentValue = ref<THEME_COLOR_VALUE>(themeColor)
+    const currentValue = computed(() => {
+      return preferenceStore.appThemeColor
+    })
     const changeColor = (index) => {
-      currentValue.value = index
       preferenceStore.updateAppThemeColor(index)
     }
 
