@@ -1,7 +1,7 @@
 import { defineStore } from "pinia"
 import taskModuleApi from "../../client/task"
-import {finishListData} from "../../pages/Task/hooks/useTaskInfo";
-import {toRaw} from "vue";
+import {finishListData} from "../../pages/Task/hooks/useTaskInfo"
+import {toRaw} from "vue"
 
 interface taskListResData {
   'task_id': number,

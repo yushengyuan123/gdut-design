@@ -1,9 +1,17 @@
 // eslint-disable-next-line @typescript-eslint/no-var-requires
 const path = require('path')
+const webpack = require('webpack')
 
 module.exports = {
   target: 'node',
-  entry: './src/index.ts',
+  entry: ['./src/main/index.ts'],
+  devServer: {
+    // contentBase: path.resolve(__dirname, 'webpackOutput'),
+    liveReload: true,
+    historyApiFallback: true,
+    port: 9090,
+    compress: true
+  },
   module: {
     rules: [
       {
@@ -27,7 +35,10 @@ module.exports = {
   },
   output: {
     filename: 'main.js',
-    path: path.resolve(__dirname, 'lib'),
+    path: path.resolve(__dirname, 'webpackOutput'),
   },
-  mode: 'none'
+  mode: 'none',
+  plugins: [
+    new webpack.HotModuleReplacementPlugin()
+  ],
 }
